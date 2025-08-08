@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
-  <title>Snake — Apple + Chill Lo‑fi + Better iPhone Touch</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Snake — Jazz Style + Bigger Thumbs-up</title>
   <style>
     :root {
       --bg: #0b1020;
@@ -14,6 +15,8 @@
       --accent: #22c55e;
       --warning: #f59e0b;
       --border: #213055;
+      --ok: #22c55e;
+      --danger: #ef4444;
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -29,14 +32,12 @@
     }
     .app {
       width: 100%;
-      max-width: 1100px;
+      max-width: 1200px;
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
     }
-    @media (min-width: 900px) {
-      .app { grid-template-columns: 1fr 380px; }
-    }
+    @media (min-width: 1050px) { .app { grid-template-columns: 1fr 420px; } }
     .card {
       background: linear-gradient(180deg, var(--panelA), var(--panelB));
       border: 1px solid var(--border);
@@ -49,37 +50,53 @@
     .title { font-weight: 800; letter-spacing: .3px; font-size: 18px; }
     .small { color: var(--muted); font-size: 12px; }
     .pill { background: #162448; border: 1px solid var(--border); border-radius: 12px; padding: 6px 10px; font-size: 14px; color: var(--text); }
-    .btn {
-      border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer;
-      color: #0a0f1f; background: #dbeafe;
-      box-shadow: 0 2px 0 rgba(255,255,255,0.08) inset, 0 6px 16px rgba(0,0,0,0.25);
-    }
+    .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer; color: #0a0f1f; background: #dbeafe; box-shadow: 0 2px 0 rgba(255,255,255,0.08) inset, 0 6px 16px rgba(0,0,0,0.25); }
     .btn:hover { filter: brightness(1.03); }
     .btn:active { transform: translateY(1px); }
     .btn-start { background: var(--accent); }
     .btn-pause { background: var(--warning); }
     .btn-danger { background: #fca5a5; }
+    .btn-equip { background: #bbf7d0; }
+    .btn-locked { background: #9ca3af; color: #0b1020; cursor: not-allowed; }
     .canvas-wrap {
-      width: 100%; max-width: 620px; margin: 0 auto;
+      width: 100%; max-width: 640px; margin: 0 auto;
       border-radius: 16px; overflow: hidden; border: 2px solid var(--border);
-      background:#101827; touch-action: none;
-      height: auto;
+      background:#101827; touch-action: none; height: auto;
     }
-    @supports (aspect-ratio: 1 / 1) {
-      .canvas-wrap { aspect-ratio: 1 / 1; }
-    }
+    @supports (aspect-ratio: 1 / 1) { .canvas-wrap { aspect-ratio: 1 / 1; } }
     canvas { display:block; width:100%; height:100%; background:#0b1020; }
     .controls { display: grid; gap: 14px; }
     .ctrl { display:grid; grid-template-columns: 1fr auto; align-items:center; gap: 12px; }
     .ctrl label { font-size: 14px; color: var(--muted); }
-    .ctrl input[type="color"], .ctrl select {
-      height: 32px; padding: 4px 8px; background: #0b1226; color: var(--text);
-      border: 1px solid var(--border); border-radius: 8px;
-    }
+    .ctrl input[type="color"], .ctrl select { height: 32px; padding: 4px 8px; background: #0b1226; color: var(--text); border: 1px solid var(--border); border-radius: 8px; }
     .ctrl input[type="color"] { width: 46px; padding:0; }
     .ctrl input[type="range"] { width: 100%; grid-column: 1 / -1; }
     .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0f172a; border:1px solid #1e293b; padding:2px 6px; border-radius:6px; }
-    .section { margin-top: 6px; padding-top: 6px; border-top: 1px solid #213055; }
+
+    /* Tabs */
+    .tabs { display: grid; gap: 10px; }
+    .tabbar { display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .tab {
+      appearance: none; border: 1px solid var(--border); background: #0b1226; color: var(--text);
+      border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer;
+    }
+    .tab[aria-selected="true"] { background: #13305f; border-color: #30539a; }
+    .tabpanel { display: none; }
+    .tabpanel.active { display: block; }
+    .tab-summary { color: var(--muted); font-size: 12px; margin-left: auto; align-self: center; }
+
+    /* Skins grid */
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 520px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+    .skin { border: 1px solid var(--border); background: #0b1226; border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+    .skin .name { font-weight: 700; font-size: 14px; }
+    .skin .req { color: var(--muted); font-size: 12px; }
+    .skin.locked { opacity: 0.55; }
+    .skin .preview { height: 36px; border-radius: 8px; border: 1px solid #1f2a44; overflow: hidden; background: #0d1428; display: grid; place-items: center; font-size: 12px; color: #93a6c6; }
+
+    /* Toast */
+    .toast { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); background: #0b1226; border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 1000; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -87,10 +104,8 @@
     <div class="card">
       <div class="row" style="margin-bottom:10px">
         <div class="stack">
-          <div class="title">Snake — Apple Snack (Chill Lo‑fi + Better iPhone Touch)</div>
-          <div class="small">
-            Touch: drag anywhere, quick flicks, or <em>tap left/right</em> to turn (optional). Keys: <span class="kbd">WASD</span>/<span class="kbd">↑↓←→</span>, Space=pause, R=restart.
-          </div>
+          <div class="title">Snake — Chill + Touch + Achievements</div>
+          <div class="small">Drag, flick, or Tap‑to‑Turn. Keys: <span class="kbd">WASD</span>/<span class="kbd">↑↓←→</span> · Space=pause · R=restart.</div>
         </div>
         <div class="row" style="gap:8px">
           <button id="startBtn" class="btn btn-start">Start</button>
@@ -98,163 +113,142 @@
           <button id="restartBtn" class="btn">Restart</button>
         </div>
       </div>
-
       <div class="row" style="margin-bottom:10px">
         <span class="pill"><strong>Score:</strong> <span id="score">0</span></span>
         <span class="pill"><strong>Best:</strong> <span id="best">0</span></span>
         <button id="resetBest" class="btn btn-danger" title="Clear saved high score">Reset High Score</button>
       </div>
-
-      <div class="canvas-wrap" id="canvasWrap">
-        <canvas id="game" width="600" height="600" aria-label="Snake game canvas"></canvas>
-      </div>
-      <div class="small" style="margin-top:8px;text-align:center">
-        Tip: quick flicks change direction instantly; taps (L/R halves) rotate when "Tap‑to‑Turn" is on.
-      </div>
+      <div class="canvas-wrap" id="canvasWrap"><canvas id="game" width="600" height="600" aria-label="Snake game canvas"></canvas></div>
+      <div class="small" style="margin-top:8px;text-align:center">Milestones unlock skins automatically. Check the Achievements tab to equip!</div>
     </div>
 
     <div class="card">
-      <div class="title">Appearance & Settings</div>
-      <div class="controls">
-        <div class="ctrl">
-          <label for="snakeColor">Snake color</label>
-          <input id="snakeColor" type="color" value="#10b981" />
+      <div class="title">Controls & Customization</div>
+      <div class="tabs">
+        <div class="tabbar" role="tablist" aria-label="Options tabs">
+          <button id="tab-achievements" class="tab" role="tab" aria-selected="true" aria-controls="panel-achievements">Achievements</button>
+          <button id="tab-settings" class="tab" role="tab" aria-selected="false" aria-controls="panel-settings">Settings</button>
+          <div id="tabSummary" class="tab-summary"></div>
         </div>
-        <div class="ctrl">
-          <label for="snakeTex">Snake texture</label>
-          <select id="snakeTex">
-            <option value="stripes" selected>Stripes</option>
-            <option value="metal">Metallic</option>
-            <option value="wood">Wood</option>
-            <option value="carbon">Carbon Fiber</option>
-            <option value="marble">Marble</option>
-            <option value="honeycomb">Honeycomb</option>
-            <option value="fabric">Fabric Weave</option>
-            <option value="neon">Neon Grid</option>
-            <option value="camo">Camouflage</option>
-            <option value="none">None (Solid)</option>
-          </select>
-        </div>
-        <div class="ctrl">
-          <label for="foodColor">Apple color</label>
-          <input id="foodColor" type="color" value="#ef4444" />
-        </div>
-        <div class="ctrl">
-          <label for="foodTex">Apple texture</label>
-          <select id="foodTex">
-            <option value="dots" selected>Speckled</option>
-            <option value="metal">Metallic</option>
-            <option value="wood">Wood</option>
-            <option value="stripes">Candy Stripes</option>
-            <option value="marble">Marble</option>
-            <option value="honeycomb">Honeycomb</option>
-            <option value="fabric">Fabric Weave</option>
-            <option value="neon">Neon Grid</option>
-            <option value="camo">Camouflage</option>
-            <option value="none">None (Solid)</option>
-          </select>
-        </div>
-        <div class="ctrl">
-          <label for="texAlpha">Texture strength: <span id="texAlphaVal">60</span>%</label>
-          <input id="texAlpha" type="range" min="0" max="100" step="5" value="60" />
-        </div>
-        <div class="ctrl">
-          <label for="bgColor">Background</label>
-          <input id="bgColor" type="color" value="#0b1020" />
-        </div>
-        <div class="ctrl">
-          <label for="borderColor">Board border color</label>
-          <input id="borderColor" type="color" value="#213055" />
-        </div>
-        <div class="ctrl">
-          <label for="gridToggle">Grid</label>
-          <input id="gridToggle" type="checkbox" checked />
-        </div>
-        <div class="ctrl">
-          <label for="speed">Speed: <span id="speedVal">10</span> ticks/sec</label>
-          <input id="speed" type="range" min="5" max="20" step="1" value="10" />
-        </div>
-      </div>
 
-      <div class="section">
-        <div class="title">Touch Controls</div>
-        <div class="controls">
-          <div class="ctrl">
-            <label for="touchMode">Touch mode</label>
-            <select id="touchMode">
-              <option value="hybrid" selected>Drag + Flick (default)</option>
-              <option value="tapturn">Tap‑to‑Turn (L=left, R=right)</option>
-              <option value="dragonly">Drag only</option>
-            </select>
-          </div>
-          <div class="ctrl">
-            <label for="flickSens">Flick sensitivity: <span id="flickSensVal">12</span> px</label>
-            <input id="flickSens" type="range" min="6" max="28" step="1" value="12" />
+        <!-- ACHIEVEMENTS TABPANEL (active by default) -->
+        <div id="panel-achievements" class="tabpanel active" role="tabpanel" tabindex="0" aria-labelledby="tab-achievements">
+          <div class="title">Achievements & Skins <span class="small" id="achSummary"></span></div>
+          <div class="small" style="margin:6px 0 10px">Unlock skins by reaching scores in one run. Tap an unlocked skin to equip.</div>
+          <div class="stack">
+            <div class="small">Snake Skins</div><div id="skinsSnake" class="grid"></div>
+            <div class="small" style="margin-top:8px">Apple Skins</div><div id="skinsApple" class="grid"></div>
           </div>
         </div>
-      </div>
 
-      <div class="section">
-        <div class="title">Audio</div>
-        <div class="controls">
-          <div class="ctrl">
-            <label for="sfxToggle">SFX (eat / game over)</label>
-            <input id="sfxToggle" type="checkbox" checked />
+        <!-- SETTINGS TABPANEL -->
+        <div id="panel-settings" class="tabpanel" role="tabpanel" tabindex="0" aria-labelledby="tab-settings">
+          <div class="controls">
+            <div class="ctrl"><label for="snakeColor">Snake color (free)</label><input id="snakeColor" type="color" value="#10b981" /></div>
+            <div class="ctrl"><label for="snakeTex">Snake texture</label><select id="snakeTex">
+              <option value="stripes" selected>Stripes</option><option value="metal">Metallic</option><option value="wood">Wood</option><option value="carbon">Carbon Fiber</option><option value="marble">Marble</option><option value="honeycomb">Honeycomb</option><option value="fabric">Fabric Weave</option><option value="neon">Neon Grid</option><option value="camo">Camouflage</option><option value="none">None (Solid)</option></select></div>
+            <div class="ctrl"><label for="foodColor">Apple color</label><input id="foodColor" type="color" value="#ef4444" /></div>
+            <div class="ctrl"><label for="foodTex">Apple texture</label><select id="foodTex">
+              <option value="dots" selected>Speckled</option><option value="metal">Metallic</option><option value="wood">Wood</option><option value="stripes">Candy Stripes</option><option value="marble">Marble</option><option value="honeycomb">Honeycomb</option><option value="fabric">Fabric Weave</option><option value="neon">Neon Grid</option><option value="camo">Camouflage</option><option value="none">None (Solid)</option></select></div>
+            <div class="ctrl"><label for="texAlpha">Texture strength: <span id="texAlphaVal">60</span>%</label><input id="texAlpha" type="range" min="0" max="100" step="5" value="60" /></div>
+            <div class="ctrl"><label for="bgColor">Background</label><input id="bgColor" type="color" value="#0b1020" /></div>
+            <div class="ctrl"><label for="borderColor">Board border color</label><input id="borderColor" type="color" value="#213055" /></div>
+            <div class="ctrl"><label for="gridToggle">Grid</label><input id="gridToggle" type="checkbox" checked /></div>
+            <div class="ctrl"><label for="speed">Speed: <span id="speedVal">10</span> ticks/sec</label><input id="speed" type="range" min="5" max="20" step="1" value="10" /></div>
           </div>
-          <div class="ctrl">
-            <label for="sfxVol">SFX Volume: <span id="sfxVolVal">70</span>%</label>
-            <input id="sfxVol" type="range" min="0" max="100" step="1" value="70" />
+
+          <div class="section">
+            <div class="title">Touch Controls</div>
+            <div class="controls">
+              <div class="ctrl"><label for="touchMode">Touch mode</label><select id="touchMode"><option value="hybrid" selected>Drag + Flick</option><option value="tapturn">Tap‑to‑Turn (L/R)</option><option value="dragonly">Drag only</option></select></div>
+              <div class="ctrl"><label for="flickSens">Flick sensitivity: <span id="flickSensVal">12</span> px</label><input id="flickSens" type="range" min="6" max="28" step="1" value="12" /></div>
+            </div>
           </div>
-          <div class="ctrl">
-            <label for="musicToggle">Chill music</label>
-            <input id="musicToggle" type="checkbox" checked />
+
+          <div class="section">
+            <div class="title">Audio</div>
+            <div class="controls">
+              <div class="ctrl"><label for="sfxToggle">SFX (eat / game over)</label><input id="sfxToggle" type="checkbox" checked /></div>
+              <div class="ctrl"><label for="sfxVol">SFX Volume: <span id="sfxVolVal">70</span>%</label><input id="sfxVol" type="range" min="0" max="100" step="1" value="70" /></div>
+              <div class="ctrl"><label for="musicToggle">Music</label><input id="musicToggle" type="checkbox" checked /></div>
+              <div class="ctrl"><label for="musicStyle">Music style</label><select id="musicStyle">
+                <option value="lofi" selected>Lo‑fi Chill</option>
+                <option value="synthwave">Synthwave Groove</option>
+                <option value="chiptune">Chiptune Bounce</option>
+                <option value="jazz">Jazz Lounge</option>
+              </select></div>
+              <div class="ctrl"><label for="musicVol">Music Volume: <span id="musicVolVal">35</span>%</label><input id="musicVol" type="range" min="0" max="100" step="1" value="35" /></div>
+              <div class="ctrl"><label for="tempo">Tempo: <span id="tempoVal">92</span> BPM</label><input id="tempo" type="range" min="60" max="140" step="1" value="92" /></div>
+              <div class="ctrl"><label for="melodyToggle">Melody</label><input id="melodyToggle" type="checkbox" checked /></div>
+              <div class="ctrl"><label for="vinylToggle">Vinyl crackle</label><input id="vinylToggle" type="checkbox" checked /></div>
+              <div class="ctrl"><label for="vinylVol">Vinyl Volume: <span id="vinylVolVal">12</span>%</label><input id="vinylVol" type="range" min="0" max="100" step="1" value="12" /></div>
+              <div class="small">Audio starts after your first tap/drag. On iPhone, ringer ON.</div>
+            </div>
           </div>
-          <div class="ctrl">
-            <label for="musicVol">Music Volume: <span id="musicVolVal">35</span>%</label>
-            <input id="musicVol" type="range" min="0" max="100" step="1" value="35" />
-          </div>
-          <div class="ctrl">
-            <label for="tempo">Tempo: <span id="tempoVal">78</span> BPM</label>
-            <input id="tempo" type="range" min="60" max="110" step="1" value="78" />
-          </div>
-          <div class="ctrl">
-            <label for="melodyToggle">Plucky melody</label>
-            <input id="melodyToggle" type="checkbox" checked />
-          </div>
-          <div class="ctrl">
-            <label for="vinylToggle">Vinyl crackle</label>
-            <input id="vinylToggle" type="checkbox" checked />
-          </div>
-          <div class="ctrl">
-            <label for="vinylVol">Vinyl Volume: <span id="vinylVolVal">12</span>%</label>
-            <input id="vinylVol" type="range" min="0" max="100" step="1" value="12" />
-          </div>
-          <div class="small">Audio starts after your first tap/drag. On iPhone, make sure the ringer is ON.</div>
         </div>
       </div>
     </div>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script>
+    // ===== Tabs =====
+    const TAB_KEY = 'snake_tab_v4_jazz';
+    const tabSettings = document.getElementById('tab-settings');
+    const tabAch = document.getElementById('tab-achievements');
+    const panelSettings = document.getElementById('panel-settings');
+    const panelAch = document.getElementById('panel-achievements');
+    const tabSummary = document.getElementById('tabSummary');
+    function setTab(name) {
+      const isAch = name === 'achievements';
+      tabAch.setAttribute('aria-selected', String(isAch));
+      tabSettings.setAttribute('aria-selected', String(!isAch));
+      panelAch.classList.toggle('active', isAch);
+      panelSettings.classList.toggle('active', !isAch);
+      try { localStorage.setItem(TAB_KEY, name); } catch {}
+      updateTabSummary();
+    }
+    function updateTabSummary() {
+      const total = (document.querySelectorAll('#skinsSnake .skin:not(.locked)').length + document.querySelectorAll('#skinsApple .skin:not(.locked)').length);
+      const all = (document.querySelectorAll('#skinsSnake .skin').length + document.querySelectorAll('#skinsApple .skin').length);
+      const text = all ? `Unlocked ${total}/${all}` : '';
+      tabSummary.textContent = text;
+    }
+    tabAch.addEventListener('click', () => setTab('achievements'));
+    tabSettings.addEventListener('click', () => setTab('settings'));
+    (function initTabFromHashOrStorage(){
+      let t = 'achievements';
+      if (location.hash === '#settings') t = 'settings';
+      try { const s = localStorage.getItem(TAB_KEY); if (s) t = s; } catch {}
+      setTab(t);
+    })();
+
+    // ===== Env & sizing =====
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const canvas = document.getElementById('game');
     const canvasWrap = document.getElementById('canvasWrap');
     function fitSquare() {
-      if (!CSS.supports || !CSS.supports('aspect-ratio: 1 / 1')) {
+      if (!(window.CSS && CSS.supports && CSS.supports('aspect-ratio: 1 / 1'))) {
         const w = canvasWrap.clientWidth || canvasWrap.offsetWidth || 600;
         canvasWrap.style.height = w + 'px';
       }
     }
-    window.addEventListener('resize', () => { fitSquare(); requestAnimationFrame(draw); }, { passive: true });
-    window.addEventListener('orientationchange', () => setTimeout(() => { fitSquare(); draw(); }, 80), { passive: true });
+    window.addEventListener('resize', () => { fitSquare(); if (ctx) requestAnimationFrame(draw); }, { passive: true });
+    window.addEventListener('orientationchange', () => setTimeout(() => { fitSquare(); if (ctx) draw(); }, 80), { passive: true });
 
     // ===== Config =====
     const COLS = 25, ROWS = 25, TILE = 24;
     const WIDTH = COLS * TILE, HEIGHT = ROWS * TILE;
-    const HS_KEY = 'snake_highscore_v12';
+    const HS_KEY = 'snake_highscore_v18';
+    const A_KEY = 'snake_unlocks_v1';
+    const EQUIP_KEY = 'snake_equip_v1';
 
-    // ===== DOM =====
-    const ctx = canvas.getContext('2d');
+    // ===== DOM / Canvas =====
+    const ctx = (function(){ try { return canvas.getContext('2d'); } catch(e){ return null; } })();
+    if (!ctx) { alert('Canvas not supported in this browser.'); }
+
+    // ===== Getters =====
     const scoreEl = document.getElementById('score');
     const bestEl = document.getElementById('best');
     const startBtn = document.getElementById('startBtn');
@@ -272,17 +266,14 @@
     const snakeTexSel = document.getElementById('snakeTex');
     const foodTexSel = document.getElementById('foodTex');
     const borderColorInput = document.getElementById('borderColor');
-
-    // Touch controls
     const touchModeSel = document.getElementById('touchMode');
     const flickSensInput = document.getElementById('flickSens');
     const flickSensVal = document.getElementById('flickSensVal');
-
-    // Audio controls
     const sfxToggle = document.getElementById('sfxToggle');
     const sfxVol = document.getElementById('sfxVol');
     const sfxVolVal = document.getElementById('sfxVolVal');
     const musicToggle = document.getElementById('musicToggle');
+    const musicStyleSel = document.getElementById('musicStyle');
     const musicVol = document.getElementById('musicVol');
     const musicVolVal = document.getElementById('musicVolVal');
     const tempoSlider = document.getElementById('tempo');
@@ -291,10 +282,14 @@
     const vinylToggle = document.getElementById('vinylToggle');
     const vinylVol = document.getElementById('vinylVol');
     const vinylVolVal = document.getElementById('vinylVolVal');
+    const achSummary = document.getElementById('achSummary');
+    const skinsSnakeDiv = document.getElementById('skinsSnake');
+    const skinsAppleDiv = document.getElementById('skinsApple');
+    const toast = document.getElementById('toast');
 
     // DPI scaling
     const dpr = isIOS ? 1 : Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
-    try { canvas.width = WIDTH * dpr; canvas.height = HEIGHT * dpr; ctx.setTransform(dpr,0,0,dpr,0,0); } catch (e) {}
+    try { if (ctx) { canvas.width = WIDTH * dpr; canvas.height = HEIGHT * dpr; ctx.setTransform(dpr,0,0,dpr,0,0); } } catch (e) {}
 
     // ===== State =====
     let snake = [ {x:8,y:12}, {x:7,y:12}, {x:6,y:12} ];
@@ -302,7 +297,8 @@
     let lastDir = { x: 1, y: 0 };
     let food = randFood(new Set(snake.map(s => key(s.x, s.y))));
     let isRunning = false, isGameOver = false;
-    let score = 0, high = Number(localStorage.getItem(HS_KEY) || 0);
+    let score = 0;
+    let high = 0; try { high = Number(localStorage.getItem(HS_KEY) || 0); } catch(e) { high = 0; }
     bestEl.textContent = high;
 
     let tickHandle = null;
@@ -312,18 +308,24 @@
     let gridOn = gridToggle.checked;
     let speed = Number(speedInput.value);
     let texAlpha = Number(texAlphaInput.value) / 100; texAlphaVal.textContent = Math.round(texAlpha * 100);
-    let borderColor = borderColorInput.value; canvasWrap.style.borderColor = borderColor;
+    let borderColor = borderColorInput.value; const canvasWrapEl = document.getElementById('canvasWrap'); if (canvasWrapEl) canvasWrapEl.style.borderColor = borderColor;
 
     // Touch state
-    let touchMode = touchModeSel.value; // 'hybrid' | 'tapturn' | 'dragonly'
+    let touchMode = touchModeSel.value;
     let flickSens = Number(flickSensInput.value); flickSensVal.textContent = flickSens;
     let dragging = false, gestureAnchor = null, gesturePos = null, downTime = 0;
+
+    // Eat FX
+    const fx = []; // {type:'thumb', x,y, t}
+    const THUMB_DURATION = 520; // ms (longer)
+    const THUMB_SCALE = 1.6; // bigger
 
     // ===== Audio engine =====
     let audio = null, masterGain = null, sfxGain = null, musicGain = null, vinylGain = null;
     let sfxOn = sfxToggle.checked;
     let sfxVolume = Number(sfxVol.value) / 100; sfxVolVal.textContent = Math.round(sfxVolume*100);
     let musicOn = musicToggle.checked;
+    let musicStyle = musicStyleSel.value;
     let musicVolume = Number(musicVol.value) / 100; musicVolVal.textContent = Math.round(musicVolume*100);
     let tempoBpm = Number(tempoSlider.value); tempoVal.textContent = tempoBpm;
     let melodyOn = melodyToggle.checked;
@@ -331,395 +333,120 @@
     let vinylVolume = Number(vinylVol.value) / 100; vinylVolVal.textContent = Math.round(vinylVolume*100);
 
     let noiseBuf = null;
-    let musicTimer = null, scheduleAhead = 0.25, lookahead = 25; // ms
-    let nextNoteTime = 0, currentStep = 0; // 16th-note steps
-    let currentBar = 0; // 0..3 in our 4-bar loop
-    let padNodes = null, padDuck = null; // pad + ducking
+    let musicTimer = null, scheduleAhead = 0.25, lookahead = 25;
+    let nextNoteTime = 0, currentStep = 0, currentBar = 0;
+    let padNodes = null, padDuck = null;
+    let hissSrc = null, hissFilter = null, crackleTimeout = null;
 
-    // Vinyl
-    let hissSrc = null, hissFilter = null;
-    let crackleTimeout = null;
+    // ===== Skins & Achievements =====
+    const SKINS_SNAKE = [
+      { id:'classic', name:'Classic', req:0, snakeTex:'stripes', snakeColor:'#10b981' },
+      { id:'gold', name:'Gold', req:10, snakeTex:'metal', snakeColor:'#f59e0b' },
+      { id:'ruby', name:'Ruby', req:15, snakeTex:'marble', snakeColor:'#dc2626' },
+      { id:'sapphire', name:'Sapphire', req:20, snakeTex:'marble', snakeColor:'#3b82f6' },
+      { id:'amethyst', name:'Amethyst', req:25, snakeTex:'marble', snakeColor:'#8b5cf6' },
+      { id:'carbon', name:'Carbon', req:12, snakeTex:'carbon', snakeColor:'#14b8a6' },
+      { id:'honey', name:'Honeycomb', req:22, snakeTex:'honeycomb', snakeColor:'#f59e0b' },
+      { id:'camo', name:'Camo', req:28, snakeTex:'camo', snakeColor:'#65a30d' },
+      { id:'neon', name:'Neon Grid', req:35, snakeTex:'neon', snakeColor:'#22d3ee' },
+      { id:'rainbow', name:'Rainbow', req:40, snakeTex:'none', snakeColor:'#ffffff', special:'rainbow' }
+    ];
+    const SKINS_APPLE = [
+      { id:'apple-classic', name:'Classic Gala', req:0, foodTex:'dots', foodColor:'#ef4444' },
+      { id:'apple-candy', name:'Candy Stripe', req:12, foodTex:'stripes', foodColor:'#ef4444' },
+      { id:'apple-wood', name:'Wood Core', req:18, foodTex:'wood', foodColor:'#b91c1c' },
+      { id:'apple-metal', name:'Metallic Apple', req:22, foodTex:'metal', foodColor:'#ef4444' },
+      { id:'apple-marble', name:'Marble Apple', req:26, foodTex:'marble', foodColor:'#ef4444' },
+      { id:'apple-neon', name:'Neon Apple', req:32, foodTex:'neon', foodColor:'#22d3ee' }
+    ];
 
+    let unlocks = loadUnlocks();
+    let equip = loadEquip();
+
+    // ===== Patterns =====
+    let snakeTexType = snakeTexSel.value, foodTexType = foodTexSel.value;
+    let snakePattern = null, snackPattern = null;
+
+    // ===== Audio init =====
     function initAudio() {
       try {
         if (!audio) {
           const AC = window.AudioContext || window.webkitAudioContext;
           if (!AC) return;
           audio = new AC();
-          masterGain = audio.createGain();
-          masterGain.gain.value = 0.9;
-          masterGain.connect(audio.destination);
-
+          masterGain = audio.createGain(); masterGain.gain.value = 0.9; masterGain.connect(audio.destination);
           sfxGain = audio.createGain(); sfxGain.gain.value = sfxVolume; sfxGain.connect(masterGain);
           musicGain = audio.createGain(); musicGain.gain.value = musicVolume; musicGain.connect(masterGain);
           vinylGain = audio.createGain(); vinylGain.gain.value = vinylVolume * 0.5; vinylGain.connect(masterGain);
         }
         if (!noiseBuf) noiseBuf = makeNoiseBuffer(audio, 1);
         if (audio.state === 'suspended') audio.resume();
-      } catch (e) {}
-    }
-
-    function makeNoiseBuffer(ac, seconds=1) {
-      const len = Math.max(1, Math.floor(ac.sampleRate * seconds));
-      const buf = ac.createBuffer(1, len, ac.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i=0; i<len; i++) data[i] = Math.random()*2 - 1;
-      return buf;
-    }
-
-    function makeDistCurve(amount=200) {
-      const k = typeof amount === 'number' ? amount : 50;
-      const n = 44100;
-      const curve = new Float32Array(n);
-      const deg = Math.PI / 180;
-      for (let i=0; i<n; ++i) {
-        const x = (i*2/n) - 1;
-        curve[i] = (3+k)*x*20*deg / (Math.PI + k*Math.abs(x));
-      }
-      return curve;
-    }
-
-    // ---- SFX ----
-    function playCrunch() {
-      if (!sfxOn) return;
-      initAudio(); if (!audio) return;
-      const t = audio.currentTime;
-      const p = (audio.createStereoPanner ? audio.createStereoPanner() : null);
-      if (p) { p.pan.value = (Math.random()*0.6 - 0.3); p.connect(sfxGain); }
-
-      try {
-        const src = audio.createBufferSource(); src.buffer = noiseBuf;
-        const hp = audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(2000, t);
-        const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(2800, t); bp.Q.value = 1.0;
-        const dist = audio.createWaveShaper(); dist.curve = makeDistCurve(400); dist.oversample = '2x';
-        const g = audio.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.28 * sfxVolume, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-        src.connect(hp).connect(bp).connect(dist).connect(g).connect(p ? p : sfxGain);
-        src.start(t); src.stop(t + 0.12);
-      } catch {}
-
-      for (let i=0; i<3; i++) {
-        const tt = t + 0.02 + i*0.015;
-        try {
-          const src = audio.createBufferSource(); src.buffer = noiseBuf;
-          const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1500 + Math.random()*1200, tt); bp.Q.value=1.2;
-          const g = audio.createGain(); g.gain.setValueAtTime(0.0001, tt);
-          g.gain.exponentialRampToValueAtTime(0.16 * sfxVolume, tt + 0.006);
-          g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.05);
-          src.connect(bp).connect(g).connect(p ? p : sfxGain);
-          src.start(tt); src.stop(tt + 0.06);
-        } catch {}
-      }
-
-      try {
-        const o = audio.createOscillator(); o.type='sine';
-        const g = audio.createGain();
-        o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.10);
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.14 * sfxVolume, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-        o.connect(g).connect(p ? p : sfxGain);
-        o.start(t); o.stop(t + 0.17);
       } catch {}
     }
 
-    function playGameOver() {
-      if (!sfxOn) return;
-      initAudio(); if (!audio) return;
-      const t = audio.currentTime;
-      try {
-        const chordGain = audio.createGain(); chordGain.gain.setValueAtTime(0.0001, t);
-        const lp = audio.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(4200, t);
-        const delay = audio.createDelay(1.0); delay.delayTime.value = 0.22;
-        const fb = audio.createGain(); fb.gain.value = 0.28;
-        chordGain.connect(lp); lp.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(sfxGain);
+    // ===== Unlock / Equip logic =====
+    function loadUnlocks() {
+      try { const raw = localStorage.getItem(A_KEY); if (raw) return JSON.parse(raw); } catch {}
+      const obj = { snake:{classic:true}, apple:{'apple-classic':true} };
+      saveUnlocks(obj); return obj;
+    }
+    function saveUnlocks(obj) { try { localStorage.setItem(A_KEY, JSON.stringify(obj)); } catch {} }
+    function loadEquip() {
+      try { const raw = localStorage.getItem(EQUIP_KEY); if (raw) return JSON.parse(raw); } catch {}
+      const obj = { snake:'classic', apple:'apple-classic' };
+      saveEquip(obj); return obj;
+    }
+    function saveEquip(obj) { try { localStorage.setItem(EQUIP_KEY, JSON.stringify(obj)); } catch {} }
 
-        [440, 523.25, 659.25].forEach((f,i)=>{
-          const o = audio.createOscillator();
-          o.type = 'sawtooth';
-          o.frequency.setValueAtTime(f, t);
-          o.frequency.exponentialRampToValueAtTime(60 + i*5, t + 0.9);
-          o.connect(chordGain); o.start(t); o.stop(t + 1.0);
-        });
-        chordGain.gain.linearRampToValueAtTime(0.22 * sfxVolume, t + 0.05);
-        chordGain.gain.linearRampToValueAtTime(0.0001, t + 1.0);
-
-        const src = audio.createBufferSource(); src.buffer = noiseBuf;
-        const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1200, t);
-        bp.frequency.exponentialRampToValueAtTime(300, t + 0.8);
-        const g = audio.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.linearRampToValueAtTime(0.18 * sfxVolume, t + 0.1);
-        g.gain.linearRampToValueAtTime(0.0001, t + 0.9);
-        src.connect(bp).connect(g).connect(sfxGain);
-        src.start(t); src.stop(t + 1.0);
-
-        let tt = t + 0.92;
-        [880, 1174.66, 1567.98].forEach((f)=>{ tt = beep(f, 'sine', 0.12, tt + 0.02, 0.14); });
-      } catch {}
+    function checkUnlocks(currentScore) {
+      const newly = [];
+      SKINS_SNAKE.forEach(s => { if (currentScore >= s.req && !unlocks.snake[s.id]) { unlocks.snake[s.id] = true; newly.push(s.name); } });
+      SKINS_APPLE.forEach(s => { if (currentScore >= s.req && !unlocks.apple[s.id]) { unlocks.apple[s.id] = true; newly.push(s.name); } });
+      if (newly.length) { saveUnlocks(unlocks); showToast('Unlocked: ' + newly.join(', ') + ' 🎉'); playUnlockJingle(); renderSkins(); updateTabSummary(); }
     }
 
-    // ---- Music: 4‑bar progression + plucks + varied drums + sidechain ----
-    const CHORDS = [
-      ['A3','C4','E4','G4'], // Am7
-      ['F3','A3','C4','E4'], // Fmaj7
-      ['C4','E4','G4','B4'], // Cmaj7
-      ['G3','B3','D4','F4'], // G7
-    ];
-    const NOTE_FREQ = {
-      'A3':220.00,'A#3':233.08,'Bb3':233.08,'B3':246.94,'C4':261.63,'C#4':277.18,'Db4':277.18,'D4':293.66,
-      'D#4':311.13,'Eb4':311.13,'E4':329.63,'F4':349.23,'F#4':369.99,'Gb4':369.99,'G4':392.00,'G#4':415.30,'Ab4':415.30,
-      'A4':440.00,'B4':493.88,'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99
-    };
-
-    // Drum patterns per 16‑step bar
-    const KICK_PATTERNS = [
-      [0, 8], [0,7,12], [0,8,10], [0,6,11]
-    ];
-    const HAT_MODE = 'eighths'; // could expand later
-    const SNARE_STEPS = [4, 12];
-
-    function startMusic() {
-      if (!musicOn) return;
-      initAudio(); if (!audio) return;
-      if (musicTimer) return;
-      startPad(CHORDS[currentBar]);
-      nextNoteTime = audio.currentTime + 0.06;
-      currentStep = 0; currentBar = 0;
-      musicTimer = setInterval(scheduler, lookahead);
-    }
-    function stopMusic() {
-      if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
-      stopPad();
-    }
-    function scheduler() {
-      if (!audio) return;
-      const spb = 60 / tempoBpm;
-      const stepDur = spb / 4; // 16th
-      while (nextNoteTime < audio.currentTime + scheduleAhead) {
-        scheduleStep(currentStep, nextNoteTime, stepDur);
-        currentStep++;
-        if (currentStep % 16 === 0) { // next bar
-          currentStep = 0;
-          currentBar = (currentBar + 1) % 4;
-          retunePad(CHORDS[currentBar], nextNoteTime + 0.001);
-        }
-        // swing: delay odd 16ths a touch
-        const swing = (currentStep % 2 === 1) ? 0.002 : 0;
-        nextNoteTime += stepDur + swing;
-      }
-    }
-    function scheduleStep(step, time, stepDur) {
-      if (!musicOn) return;
-      // Hats
-      if (HAT_MODE === 'eighths' && step % 2 === 0) scheduleHat(time);
-      // Kick
-      const kp = KICK_PATTERNS[currentBar];
-      if (kp.includes(step)) scheduleKick(time);
-      // Snare
-      if (SNARE_STEPS.includes(step)) scheduleSnare(time);
-      // Melody (plucks) on quarters (0,4,8,12) with a gentle syncopation
-      if (melodyOn && (step % 4 === 0)) {
-        const chord = CHORDS[currentBar];
-        const pick = Math.random();
-        const note = (pick < 0.5) ? chord[1] : (pick < 0.8 ? chord[2] : chord[3]);
-        schedulePluck(note, time + 0.005 * (Math.random()*2), stepDur * (0.95 + Math.random()*0.1));
-      }
+    function applyEquipped() {
+      const s = SKINS_SNAKE.find(x => x.id === equip.snake) || SKINS_SNAKE[0];
+      snakeColor = s.snakeColor; snakeColorInput.value = s.snakeColor;
+      snakeTexType = s.special === 'rainbow' ? 'none' : s.snakeTex;
+      snakeTexSel.value = snakeTexType;
+      const a = SKINS_APPLE.find(x => x.id === equip.apple) || SKINS_APPLE[0];
+      foodColor = a.foodColor; foodColorInput.value = a.foodColor;
+      foodTexType = a.foodTex; foodTexSel.value = foodTexType;
+      refreshPatterns();
     }
 
-    function scheduleKick(time, lvl=1.0) {
-      try {
-        const o = audio.createOscillator();
-        const g = audio.createGain();
-        const f = audio.createBiquadFilter();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(120, time);
-        o.frequency.exponentialRampToValueAtTime(55, time + 0.1);
-        g.gain.setValueAtTime(0.0001, time);
-        g.gain.exponentialRampToValueAtTime(0.5 * musicVolume * lvl, time + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + 0.28);
-        f.type = 'lowpass'; f.frequency.setValueAtTime(800, time);
-        o.connect(g).connect(f).connect(musicGain);
-        o.start(time);
-        o.stop(time + 0.35);
-        // sidechain duck pad
-        if (padDuck) {
-          padDuck.gain.cancelScheduledValues(time);
-          padDuck.gain.setValueAtTime(padDuck.gain.value, time);
-          padDuck.gain.linearRampToValueAtTime(0.85, time + 0.03);
-          padDuck.gain.linearRampToValueAtTime(1.0, time + 0.2);
-        }
-      } catch {}
+    function renderSkins() {
+      const unlockedSnake = SKINS_SNAKE.filter(s => unlocks.snake[s.id]);
+      const unlockedApple = SKINS_APPLE.filter(s => unlocks.apple[s.id]);
+      achSummary.textContent = `(${unlockedSnake.length + unlockedApple.length}/${SKINS_SNAKE.length + SKINS_APPLE.length} unlocked)`;
+      skinsSnakeDiv.innerHTML = SKINS_SNAKE.map(s => skinCardHTML(s, 'snake', !!unlocks.snake[s.id], equip.snake === s.id)).join('');
+      skinsAppleDiv.innerHTML = SKINS_APPLE.map(s => skinCardHTML(s, 'apple', !!unlocks.apple[s.id], equip.apple === s.id)).join('');
+      skinsSnakeDiv.querySelectorAll('[data-equip]').forEach(btn => btn.addEventListener('click', equipSkin));
+      skinsAppleDiv.querySelectorAll('[data-equip]').forEach(btn => btn.addEventListener('click', equipSkin));
     }
-    function scheduleSnare(time) {
-      try {
-        const src = audio.createBufferSource();
-        src.buffer = noiseBuf;
-        const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1800, time); bp.Q.value=0.6;
-        const hp = audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(700, time);
-        const g = audio.createGain();
-        g.gain.setValueAtTime(0.0001, time);
-        g.gain.exponentialRampToValueAtTime(0.35 * musicVolume, time + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
-        src.connect(bp).connect(hp).connect(g).connect(musicGain);
-        src.start(time);
-        src.stop(time + 0.2);
-      } catch {}
+    function skinCardHTML(s, kind, isUnlocked, isEquipped) {
+      const cls = 'skin' + (isUnlocked ? '' : ' locked');
+      const req = s.req ? `Score ${s.req}+` : 'Default';
+      const btn = isUnlocked ? `<button class="btn btn-equip" data-equip="${kind}:${s.id}">${isEquipped ? 'Equipped' : 'Equip'}</button>` : `<button class="btn btn-locked" disabled>Locked</button>`;
+      const previewStyle = (kind==='snake') ? `background: linear-gradient(90deg, ${s.snakeColor} 0%, ${shade(s.snakeColor,-20)} 100%);` : `background: linear-gradient(90deg, ${s.foodColor} 0%, ${shade(s.foodColor,-20)} 100%);`;
+      return `<div class="${cls}"><div class="name">${s.name}</div><div class="preview" style="${previewStyle}">${isUnlocked ? (isEquipped ? 'Equipped' : 'Unlocked') : 'Locked'}</div><div class="req">${req}</div>${btn}</div>`;
     }
-    function scheduleHat(time) {
-      try {
-        const src = audio.createBufferSource();
-        src.buffer = noiseBuf;
-        const hp = audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(8000, time);
-        const g = audio.createGain();
-        g.gain.setValueAtTime(0.0001, time);
-        g.gain.exponentialRampToValueAtTime(0.18 * musicVolume, time + 0.005);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
-        src.connect(hp).connect(g).connect(musicGain);
-        src.start(time);
-        src.stop(time + 0.06);
-      } catch {}
+    function equipSkin(e) {
+      const id = e.currentTarget.getAttribute('data-equip'); if (!id) return;
+      const [kind, skinId] = id.split(':');
+      if (kind === 'snake') { if (!unlocks.snake[skinId]) return; equip.snake = skinId; saveEquip(equip); applyEquipped(); showToast('Equipped snake: ' + (SKINS_SNAKE.find(s=>s.id===skinId).name)); }
+      else { if (!unlocks.apple[skinId]) return; equip.apple = skinId; saveEquip(equip); applyEquipped(); showToast('Equipped apple: ' + (SKINS_APPLE.find(s=>s.id===skinId).name)); }
+      renderSkins(); updateTabSummary();
     }
-    function schedulePluck(noteName, time, dur) {
-      try {
-        const f0 = NOTE_FREQ[noteName] || 440;
-        const o = audio.createOscillator();
-        const g = audio.createGain();
-        const lp = audio.createBiquadFilter();
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(f0, time);
-        lp.type = 'lowpass'; lp.frequency.setValueAtTime(1500, time);
-        g.gain.setValueAtTime(0.0001, time);
-        g.gain.exponentialRampToValueAtTime(0.18 * musicVolume, time + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, time + Math.min(0.35, dur));
-        o.connect(lp).connect(g).connect(musicGain);
-        o.start(time);
-        o.stop(time + Math.min(0.45, dur + 0.1));
-      } catch {}
-    }
-
-    function startPad(chord) {
-      try {
-        if (padNodes) return;
-        const duck = audio.createGain(); duck.gain.value = 1.0; padDuck = duck;
-        const g = audio.createGain(); g.gain.setValueAtTime(0.0001, audio.currentTime);
-        const lp = audio.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.2;
-        duck.connect(g).connect(lp).connect(musicGain);
-        const freqs = chordTriad(chord); // 3 freqs
-        const lfo = audio.createOscillator();
-        const lfoGain = audio.createGain(); lfoGain.gain.value = 2.5;
-        lfo.frequency.value = 0.28; lfo.connect(lfoGain);
-        const oscs = freqs.map((f) => {
-          const o = audio.createOscillator();
-          o.type = 'sawtooth';
-          o.frequency.value = f;
-          const det = audio.createGain(); det.gain.value = 1;
-          lfoGain.connect(det); det.connect(o.detune);
-          o.connect(duck); o.start();
-          return o;
-        });
-        const now = audio.currentTime;
-        g.gain.linearRampToValueAtTime(0.10 * musicVolume, now + 1.2);
-        lfo.start();
-        padNodes = { oscs, g, lp, lfo, lfoGain, duck };
-      } catch {}
-    }
-    function stopPad() {
-      if (!padNodes) return;
-      try {
-        const now = audio.currentTime;
-        padNodes.g.gain.linearRampToValueAtTime(0.0001, now + 0.6);
-        setTimeout(() => {
-          try { padNodes.oscs.forEach(o => o.stop()); padNodes.lfo.stop(); } catch {}
-          padNodes = null; padDuck = null;
-        }, 650);
-      } catch {}
-    }
-    function retunePad(chord, when) {
-      if (!padNodes || !audio) return;
-      try {
-        const freqs = chordTriad(chord);
-        padNodes.oscs.forEach((o, i) => {
-          o.frequency.cancelScheduledValues(when);
-          o.frequency.setValueAtTime(o.frequency.value, when);
-          o.frequency.linearRampToValueAtTime(freqs[i % freqs.length], when + 0.15);
-        });
-      } catch {}
-    }
-    function chordTriad(chord) {
-      // pick 3 notes (root/3rd/5th) from chord names, adjust octaves for a cozy spread
-      const [n1, n2, n3] = [chord[0], chord[1], chord[2]];
-      return [NOTE_FREQ[n1], NOTE_FREQ[n2], NOTE_FREQ[n3]].map(x => x || 220);
-    }
-
-    // ---- Vinyl ----
-    function startVinyl() {
-      if (!vinylOn) return;
-      initAudio(); if (!audio) return;
-      if (!vinylGain) return;
-      try {
-        if (!hissSrc) {
-          hissSrc = audio.createBufferSource();
-          hissSrc.buffer = noiseBuf;
-          hissSrc.loop = true;
-          hissFilter = audio.createBiquadFilter();
-          hissFilter.type = 'bandpass';
-          hissFilter.frequency.value = 3500;
-          hissFilter.Q.value = 0.6;
-          const g = audio.createGain();
-          g.gain.value = 0.08 * vinylVolume;
-          hissSrc.connect(hissFilter).connect(g).connect(vinylGain);
-          hissSrc.start();
-        }
-        scheduleCrackle();
-      } catch {}
-    }
-    function stopVinyl() {
-      try {
-        if (hissSrc) { try { hissSrc.stop(); } catch {} hissSrc = null; }
-        if (crackleTimeout) { clearTimeout(crackleTimeout); crackleTimeout = null; }
-      } catch {}
-    }
-    function scheduleCrackle() {
-      if (!vinylOn || !audio) return;
-      const next = 80 + Math.random()*450;
-      crackleTimeout = setTimeout(() => {
-        spawnCracklePop();
-        if (Math.random() < 0.3) setTimeout(spawnCracklePop, 25 + Math.random()*50);
-        scheduleCrackle();
-      }, next);
-    }
-    function spawnCracklePop() {
-      if (!audio) return;
-      try {
-        const t = audio.currentTime + 0.002;
-        const src = audio.createBufferSource(); src.buffer = noiseBuf;
-        const hp = audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(2500, t);
-        const g = audio.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.08 * vinylVolume, t + 0.002);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
-        const pan = (audio.createStereoPanner ? audio.createStereoPanner() : null);
-        if (pan) { pan.pan.value = (Math.random()*2 - 1) * 0.4; src.connect(hp).connect(g).connect(pan).connect(vinylGain); }
-        else { src.connect(hp).connect(g).connect(vinylGain); }
-        src.start(t); src.stop(t + 0.03);
-      } catch {}
-    }
+    function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1600); }
 
     // ===== Utils =====
     function key(x, y) { return x + ',' + y; }
-    function randFood(snakeSet) {
-      while (true) {
-        const x = Math.floor(Math.random() * COLS);
-        const y = Math.floor(Math.random() * ROWS);
-        if (!snakeSet.has(key(x, y))) return { x, y };
-      }
-    }
+    function randFood(snakeSet) { while (true) { const x = Math.floor(Math.random() * COLS); const y = Math.floor(Math.random() * ROWS); if (!snakeSet.has(key(x, y))) return { x, y }; } }
     function shade(hex, amt) {
-      let c = hex.replace('#',''); if (c.length === 3) c = c.split('').map(ch => ch+ch).join('');
-      const num = parseInt(c, 16);
+      let c = (hex||'#000').replace('#',''); if (c.length === 3) c = c.split('').map(ch => ch+ch).join('');
+      const num = parseInt(c || '000000', 16);
       let r = (num>>16)&255, g=(num>>8)&255, b=num&255;
       r = Math.min(255, Math.max(0, r + Math.round(2.55*amt)));
       g = Math.min(255, Math.max(0, g + Math.round(2.55*amt)));
@@ -729,9 +456,6 @@
     function haptic(ms=6) { if ('vibrate' in navigator) navigator.vibrate(ms); }
 
     // ===== Patterns =====
-    let snakeTexType = snakeTexSel.value, foodTexType = foodTexSel.value;
-    let snakePattern = makePattern(snakeTexType, snakeColor);
-    let snackPattern = makePattern(foodTexType, foodColor);
     function makePattern(type, color) {
       if (type === 'none') return null;
       const off = document.createElement('canvas');
@@ -776,11 +500,7 @@
         } else if (type === 'honeycomb') {
           c.strokeStyle = shade(color, -30); c.globalAlpha = 0.4;
           const s = 6, h = Math.sqrt(3)*s/2;
-          for (let yy=-h; yy<size+h; yy+=h) {
-            for (let xx=-s; xx<size+s; xx+=1.5*s) {
-              hex(c, xx + ((Math.round(yy/h)%2)?0.75*s:0), yy, s);
-            }
-          }
+          for (let yy=-h; yy<size+h; yy+=h) { for (let xx=-s; xx<size+s; xx+=1.5*s) { hex(c, xx + ((Math.round(yy/h)%2)?0.75*s:0), yy, s); } }
           c.globalAlpha = 1;
         } else if (type === 'fabric') {
           const a = shade(color, -25), b = shade(color, 25);
@@ -811,15 +531,11 @@
         c2.closePath(); c2.fill();
       }
     }
-    function refreshPatterns() {
-      snakePattern = makePattern(snakeTexType, snakeColor);
-      snackPattern = makePattern(foodTexType, foodColor);
-      draw();
-    }
+    function refreshPatterns() { snakePattern = makePattern(snakeTexType, snakeColor); snackPattern = makePattern(foodTexType, foodColor); if (ctx) draw(); }
 
     // ===== Game control =====
     function start() { if (!isGameOver && !isRunning) { isRunning = true; schedule(); if (musicOn) startMusic(); if (vinylOn) startVinyl(); } }
-    function pause() { isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; stopMusic(); stopVinyl(); draw(); }
+    function pause() { isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; stopMusic(); stopVinyl(); if (ctx) draw(); }
     function restart() {
       snake = [ {x:8,y:12}, {x:7,y:12}, {x:6,y:12} ];
       dir = { x: 1, y: 0 }; lastDir = { x: 1, y: 0 };
@@ -838,18 +554,16 @@
       snake.unshift(newHead); if (!ate) snake.pop();
       if (ate) {
         score += 1; scoreEl.textContent = score;
-        if (score > high) { high = score; bestEl.textContent = high; localStorage.setItem(HS_KEY, String(high)); }
+        if (score > high) { high = score; bestEl.textContent = high; try { localStorage.setItem(HS_KEY, String(high)); } catch {} }
+        const prevFood = food; // for thumbs-up fx
         const snakeSet = new Set(snake.map(s => key(s.x, s.y))); food = randFood(snakeSet);
-        haptic(8); playCrunch();
+        haptic(8); playEatChime();
+        fx.push({ type:'thumb', x: prevFood.x, y: prevFood.y, t: performance.now() });
+        checkUnlocks(score);
       }
-      draw();
+      if (ctx) draw();
     }
-    function endGame() {
-      isGameOver = true; isRunning = false;
-      if (tickHandle) clearInterval(tickHandle); tickHandle = null;
-      stopMusic(); stopVinyl(); playGameOver();
-      draw();
-    }
+    function endGame() { isGameOver = true; isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; stopMusic(); stopVinyl(); playGameOver(); if (ctx) draw(); }
 
     // ===== Input: Keyboard =====
     window.addEventListener('keydown', (e) => {
@@ -864,13 +578,12 @@
       initAudio();
     }, { passive: false });
 
-    // ===== Input: Touch / Pointer — drag + flick + optional tap‑to‑turn =====
+    // ===== Input: Touch / Pointer =====
     function trySetDir(x, y) {
       if (x === 0 && y === 0) return false;
       if (lastDir.x + x === 0 && lastDir.y + y === 0) return false;
       if (dir.x + x === 0 && dir.y + y === 0) return false;
-      dir = { x, y };
-      return true;
+      dir = { x, y }; return true;
     }
     function turnLeft() {
       if (dir.x === 1 && dir.y === 0) return trySetDir(0,-1);
@@ -884,7 +597,6 @@
       if (dir.x === 0 && dir.y === 1) return trySetDir(-1,0);
       if (dir.x === 0 && dir.y === -1) return trySetDir(1,0);
     }
-
     function getCanvasPosFromEvent(e) {
       const rect = canvas.getBoundingClientRect();
       let cx, cy;
@@ -895,25 +607,20 @@
       const y = (cy - rect.top) / rect.height * HEIGHT;
       return { x, y };
     }
-
-    function onStart(x, y, e) {
-      dragging = true; gestureAnchor = {x,y}; gesturePos = {x,y}; downTime = performance.now();
-      if (!isRunning && !isGameOver) start(); initAudio();
-      if (e&&e.preventDefault) e.preventDefault();
-    }
+    function onStart(x, y, e) { dragging = true; gestureAnchor = {x,y}; gesturePos = {x,y}; downTime = performance.now(); if (!isRunning && !isGameOver) start(); initAudio(); if (e&&e.preventDefault) e.preventDefault(); }
     function onMove(x, y, e) {
       if (!dragging) return;
       gesturePos = {x,y};
       if (touchMode === 'dragonly' || touchMode === 'hybrid') {
         const dx = gesturePos.x - gestureAnchor.x, dy = gesturePos.y - gestureAnchor.y;
-        const ax = Math.abs(dx), ay = Math.abs(dy), THRESH = 10; // a bit easier than before
+        const ax = Math.abs(dx), ay = Math.abs(dy), THRESH = 10;
         if (ax >= THRESH || ay >= THRESH) {
           let ndx = 0, ndy = 0; if (ax > ay) ndx = dx > 0 ? 1 : -1; else ndy = dy > 0 ? 1 : -1;
           const changed = trySetDir(ndx, ndy);
           if (changed) { haptic(6); gestureAnchor = { ...gesturePos }; }
         }
       }
-      draw();
+      if (ctx) draw();
       if (e&&e.preventDefault) e.preventDefault();
     }
     function onEnd(e) {
@@ -924,13 +631,11 @@
       const dx = end.x - start.x, dy = end.y - start.y;
       const ax = Math.abs(dx), ay = Math.abs(dy);
       const dist = Math.hypot(dx,dy);
-      const FLICK = flickSens; // px
-      const QUICK = 240; // ms
+      const FLICK = flickSens; const QUICK = 240;
       if ((touchMode === 'hybrid' || touchMode === 'dragonly') && dt <= QUICK && dist >= FLICK) {
         let ndx = 0, ndy = 0; if (ax > ay) ndx = dx > 0 ? 1 : -1; else ndy = dy > 0 ? 1 : -1;
         if (trySetDir(ndx, ndy)) haptic(10);
       } else if (touchMode === 'tapturn' || (touchMode === 'hybrid' && dt <= 250 && dist < 8)) {
-        // Tap‑to‑Turn: left half = turnLeft, right half = turnRight
         const rect = canvas.getBoundingClientRect();
         const tapX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : (e.clientX ?? rect.left);
         const center = rect.left + rect.width/2;
@@ -938,12 +643,11 @@
         if (turned) haptic(8);
       }
       dragging = false; gestureAnchor = null; gesturePos = null;
-      draw();
+      if (ctx) draw();
       if (e&&e.preventDefault) e.preventDefault();
     }
-
     if ('onpointerdown' in window) {
-      canvas.addEventListener('pointerdown', (e) => { const p = getCanvasPosFromEvent(e); canvas.setPointerCapture(e.pointerId); onStart(p.x, p.y, e); }, { passive: false });
+      canvas.addEventListener('pointerdown', (e) => { const p = getCanvasPosFromEvent(e); try{canvas.setPointerCapture(e.pointerId);}catch{} onStart(p.x, p.y, e); }, { passive: false });
       canvas.addEventListener('pointermove', (e) => { const p = getCanvasPosFromEvent(e); onMove(p.x, p.y, e); }, { passive: false });
       const end = (e) => { onEnd(e); try { canvas.releasePointerCapture(e.pointerId); } catch {} };
       canvas.addEventListener('pointerup', end, { passive: false });
@@ -971,7 +675,8 @@
           ctx.globalAlpha = 1;
         }
         drawApple(food.x, food.y, foodColor);
-        for (let i = snake.length - 1; i >= 0; i--) { const seg = snake[i]; drawSnakeBlock(seg.x, seg.y, snakeColor, i===0); }
+        for (let i = snake.length - 1; i >= 0; i--) { const seg = snake[i]; drawSnakeBlock(seg.x, seg.y, snakeColor, i===0, i); }
+        drawFx();
         if (dragging && gestureAnchor && gesturePos) {
           ctx.globalAlpha = 0.9; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(gestureAnchor.x, gestureAnchor.y); ctx.lineTo(gesturePos.x, gesturePos.y); ctx.stroke();
@@ -990,8 +695,14 @@
         ctx.restore();
       } catch {}
     }
-    function drawSnakeBlock(gx, gy, color, head=false) {
+    function drawSnakeBlock(gx, gy, color, head=false, idx=0) {
       const x = gx*TILE, y = gy*TILE, pad=2, w=TILE-pad*2, h=TILE-pad*2, r=5;
+      const skin = SKINS_SNAKE.find(z => z.id === equip.snake);
+      if (skin && skin.special === 'rainbow') {
+        const t = performance.now() * 0.0008;
+        const hue = ( (idx*14) + (t*120) ) % 360;
+        color = hslToHex(hue, 70, 55);
+      }
       const grad = ctx.createLinearGradient(0, y + pad, 0, y + pad + h);
       grad.addColorStop(0, shade(color, 30)); grad.addColorStop(1, shade(color, -15));
       ctx.fillStyle = grad; roundRectPath(x + pad, y + pad, w, h, r); ctx.fill();
@@ -1002,6 +713,14 @@
         ctx.beginPath(); ctx.arc(x + TILE/2 - off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(x + TILE/2 + off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
       }
+    }
+    function hslToHex(h, s, l){
+      s /= 100; l /= 100;
+      const k = n => (n + h/30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      const toHex = x => Math.round(x*255).toString(16).padStart(2, '0');
+      return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
     }
     function drawApple(gx, gy, color) {
       const cx = gx*TILE + TILE/2, cy = gy*TILE + TILE/2;
@@ -1030,6 +749,54 @@
       ctx.beginPath(); ctx.ellipse(cx - r*0.3, cy - r*0.2, r*0.28, r*0.16, -0.5, 0, Math.PI*2); ctx.fill();
       ctx.restore();
     }
+    function drawFx() {
+      const now = performance.now();
+      for (let i = fx.length - 1; i >= 0; i--) {
+        const e = fx[i];
+        const age = now - e.t;
+        if (age > THUMB_DURATION) { fx.splice(i, 1); continue; }
+        const t = age / THUMB_DURATION;
+        const alpha = 1 - t;
+        const yoff = -t * (TILE * 0.9);
+        if (e.type === 'thumb') drawThumb(e.x, e.y, alpha, yoff);
+      }
+    }
+    function drawThumb(gx, gy, alpha, yoff) {
+      const px = gx*TILE + TILE*0.55;
+      const py = gy*TILE + TILE*0.10 + yoff;
+      const S = Math.max(1, Math.floor(TILE * 0.10 * THUMB_SCALE / 1.6)); // larger pixels
+      const pat = [
+        "....XX....",
+        "...XXXX...",
+        "..XXXXX...",
+        ".XXX.XX...",
+        "...X.XX...",
+        "...X.XX...",
+        "...X.XX...",
+        "...XXXX...",
+        "..XXXXXX.."
+      ];
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      for (let r=0; r<pat.length; r++) {
+        for (let c=0; c<pat[r].length; c++) {
+          if (pat[r][c] === 'X') {
+            const x = px + (c - pat[0].length/2) * S;
+            const y = py + r * S;
+            ctx.fillStyle = '#ffec8b';
+            ctx.fillRect(x, y, S, S);
+            // Outline for visibility
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = Math.max(1, Math.floor(S*0.18));
+            ctx.strokeRect(x + 0.3, y + 0.3, S - 0.6, S - 0.6);
+            // Soft glow
+            ctx.fillStyle = 'rgba(255,255,200,0.15)';
+            ctx.fillRect(x-1, y-1, S+2, S+2);
+          }
+        }
+      }
+      ctx.restore();
+    }
     function roundRectPath(x, y, w, h, r) {
       const rr = Math.max(0, Math.min(r, w/2, h/2));
       ctx.beginPath();
@@ -1045,24 +812,23 @@
     startBtn.addEventListener('click', () => { initAudio(); start(); });
     pauseBtn.addEventListener('click', () => { initAudio(); pause(); });
     restartBtn.addEventListener('click', () => { initAudio(); restart(); });
-    resetBestBtn.addEventListener('click', () => { localStorage.removeItem(HS_KEY); high = 0; bestEl.textContent = high; });
+    resetBestBtn.addEventListener('click', () => { try { localStorage.removeItem(HS_KEY); } catch{} high = 0; bestEl.textContent = high; });
 
     snakeColorInput.addEventListener('input', (e) => { snakeColor = e.target.value; refreshPatterns(); });
     foodColorInput.addEventListener('input', (e) => { foodColor = e.target.value; refreshPatterns(); });
-    bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; draw(); });
-    borderColorInput.addEventListener('input', (e) => { borderColor = e.target.value; canvasWrap.style.borderColor = borderColor; });
-    gridToggle.addEventListener('change', (e) => { gridOn = e.target.checked; draw(); });
+    bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; if (ctx) draw(); });
+    borderColorInput.addEventListener('input', (e) => { borderColor = e.target.value; const el = document.getElementById('canvasWrap'); if (el) el.style.borderColor = borderColor; });
+    gridToggle.addEventListener('change', (e) => { gridOn = e.target.checked; if (ctx) draw(); });
     speedInput.addEventListener('input', (e) => { speed = Number(e.target.value); speedVal.textContent = speed; if (isRunning) schedule(); });
-    texAlphaInput.addEventListener('input', (e) => { texAlpha = Number(e.target.value)/100; texAlphaVal.textContent = e.target.value; draw(); });
+    texAlphaInput.addEventListener('input', (e) => { texAlpha = Number(e.target.value)/100; texAlphaVal.textContent = e.target.value; if (ctx) draw(); });
     snakeTexSel.addEventListener('change', (e) => { snakeTexType = e.target.value; refreshPatterns(); });
     foodTexSel.addEventListener('change', (e) => { foodTexType = e.target.value; refreshPatterns(); });
-
     touchModeSel.addEventListener('change', (e) => { touchMode = e.target.value; });
     flickSensInput.addEventListener('input', (e) => { flickSens = Number(e.target.value); flickSensVal.textContent = flickSens; });
-
     sfxToggle.addEventListener('change', (e) => { sfxOn = e.target.checked; initAudio(); });
     sfxVol.addEventListener('input', (e) => { sfxVolume = Number(e.target.value)/100; sfxVolVal.textContent = e.target.value; if (sfxGain && audio) sfxGain.gain.setValueAtTime(sfxVolume, audio.currentTime); });
     musicToggle.addEventListener('change', (e) => { musicOn = e.target.checked; if (musicOn && isRunning) startMusic(); else stopMusic(); });
+    musicStyleSel.addEventListener('change', (e) => { musicStyle = e.target.value; if (isRunning && musicOn) { stopMusic(); startMusic(); } });
     musicVol.addEventListener('input', (e) => {
       musicVolume = Number(e.target.value)/100; musicVolVal.textContent = e.target.value;
       if (musicGain && audio) musicGain.gain.setValueAtTime(musicVolume, audio.currentTime);
@@ -1070,14 +836,334 @@
     });
     tempoSlider.addEventListener('input', (e) => { tempoBpm = Number(e.target.value); tempoVal.textContent = tempoBpm; });
     melodyToggle.addEventListener('change', (e) => { melodyOn = e.target.checked; });
-
     vinylToggle.addEventListener('change', (e) => { vinylOn = e.target.checked; if (vinylOn && isRunning) startVinyl(); else stopVinyl(); });
     vinylVol.addEventListener('input', (e) => { vinylVolume = Number(e.target.value)/100; vinylVolVal.textContent = e.target.value; if (vinylGain && audio) vinylGain.gain.setValueAtTime(vinylVolume * 0.5, audio.currentTime); });
 
-    // Initial size + draw
+    // ===== Audio core =====
+    function makeNoiseBuffer(ac, seconds=1) { const len = Math.max(1, Math.floor(ac.sampleRate * seconds)); const buf = ac.createBuffer(1, len, ac.sampleRate); const data = buf.getChannelData(0); for (let i=0; i<len; i++) data[i] = Math.random()*2 - 1; return buf; }
+    function makeDistCurve(amount=200) { const k = typeof amount === 'number' ? amount : 50; const n = 44100; const curve = new Float32Array(n); const deg = Math.PI / 180; for (let i=0; i<n; ++i) { const x = (i*2/n) - 1; curve[i] = (3+k)*x*20*deg / (Math.PI + k*Math.abs(x)); } return curve; }
+
+    // Gold "ching" eat sound
+    function playEatChime() {
+      if (!sfxOn) return; initAudio(); if (!audio) return;
+      const t = audio.currentTime;
+      try {
+        // Bell partials
+        const freqs = [1200, 1800, 2400];
+        for (let i=0;i<freqs.length;i++){
+          const f = freqs[i];
+          const o = audio.createOscillator(); const g = audio.createGain();
+          const hp = audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(800, t);
+          const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(f, t); bp.Q.value = 10 - i*2;
+          o.type='sine'; o.frequency.setValueAtTime(f, t);
+          g.gain.setValueAtTime(0.0001, t);
+          const a = 0.008 + i*0.003, d = 0.25 + i*0.06;
+          g.gain.exponentialRampToValueAtTime(0.25 * sfxVolume, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+          o.connect(bp).connect(hp).connect(g).connect(sfxGain);
+          o.start(t); o.stop(t + d + 0.02);
+        }
+        const src = audio.createBufferSource(); src.buffer = noiseBuf;
+        const hp2 = audio.createBiquadFilter(); hp2.type='highpass'; hp2.frequency.setValueAtTime(5000, t);
+        const g2 = audio.createGain(); g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.08*sfxVolume, t + 0.01); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+        src.connect(hp2).connect(g2).connect(sfxGain); src.start(t); src.stop(t + 0.07);
+      } catch {}
+    }
+
+    function playGameOver() {
+      if (!sfxOn) return; initAudio(); if (!audio) return; const t = audio.currentTime;
+      try { const chordGain = audio.createGain(); chordGain.gain.setValueAtTime(0.0001, t);
+        const lp = audio.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(3800, t);
+        const delay = audio.createDelay(1.0); delay.delayTime.value = 0.24; const fb = audio.createGain(); fb.gain.value = 0.30;
+        chordGain.connect(lp); lp.connect(delay); delay.connect(fb); fb.connect(delay); delay.connect(sfxGain);
+        const arr = [392.00, 523.25, 659.25];
+        for (let i=0;i<arr.length;i++){ const f=arr[i]; const o = audio.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(70 + i*5, t + 0.9); o.connect(chordGain); o.start(t); o.stop(t + 1.0); }
+        chordGain.gain.linearRampToValueAtTime(0.22 * sfxVolume, t + 0.05); chordGain.gain.linearRampToValueAtTime(0.0001, t + 1.0);
+        const src = audio.createBufferSource(); src.buffer = noiseBuf; const bp = audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1200, t); bp.frequency.exponentialRampToValueAtTime(300, t + 0.8);
+        const g = audio.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.18 * sfxVolume, t + 0.1); g.gain.linearRampToValueAtTime(0.0001, t + 0.9);
+        src.connect(bp).connect(g).connect(sfxGain); src.start(t); src.stop(t + 1.0);
+      } catch {}
+    }
+
+    // ===== Music styles =====
+    const NOTE_FREQ = {'A2':110.00,'A#2':116.54,'Bb2':116.54,'B2':123.47,'C3':130.81,'C#3':138.59,'Db3':138.59,'D3':146.83,'D#3':155.56,'Eb3':155.56,
+      'E3':164.81,'F3':174.61,'F#3':185.00,'Gb3':185.00,'G3':196.00,'G#3':207.65,'Ab3':207.65,'A3':220.00,'B3':246.94,'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,'G4':392.00,'A4':440.00,'B4':493.88,'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99};
+    function styleConfig(name) {
+      if (name === 'synthwave') return {
+        chords: [['A3','C4','E4'],['F3','A3','C4'],['C4','E4','G4'],['G3','B3','D4']],
+        kicks: [[0,4,8,12],[0,4,8,12],[0,4,8,12],[0,4,8,12]],
+        snares: [4,12],
+        snareType: 'snare',
+        hats: 'sixteenths',
+        swing: 'light',
+        bass: 'pulse',
+        lead: 'saw',
+        pad: 'saw'
+      };
+      if (name === 'chiptune') return {
+        chords: [['C4','E4','G4'],['A3','C4','E4'],['F3','A3','C4'],['G3','B3','D4']],
+        kicks: [[0,8],[0,8,12],[0,8,10],[0,6,11]],
+        snares: [4,12],
+        snareType: 'snare',
+        hats: 'sixteenths',
+        swing: 'light',
+        bass: 'arp',
+        lead: 'square',
+        pad: 'square'
+      };
+      if (name === 'jazz') return {
+        chords: [['D3','F3','A3','C4'],['G3','B3','D4','F4'],['C3','E3','G3','B3'],['A2','C3','E3','G3']], // Dm7 G7 Cmaj7 Am7
+        kicks: [[],[],[],[]],
+        snares: [4,12],
+        snareType: 'brush',
+        hats: 'ride',
+        swing: 'jazz',
+        bass: 'walking',
+        lead: 'triangle',
+        pad: 'square'
+      };
+      // default: lofi
+      return {
+        chords: [['A3','C4','E4','G4'],['F3','A3','C4','E4'],['C4','E4','G4','B4'],['G3','B3','D4','F4']],
+        kicks: [[0,8],[0,7,12],[0,8,10],[0,6,11]],
+        snares: [4,12],
+        snareType: 'snare',
+        hats: 'eighths',
+        swing: 'light',
+        bass: null,
+        lead: 'triangle',
+        pad: 'saw'
+      };
+    }
+    let STYL = styleConfig(musicStyle);
+    function setStyle(name){ STYL = styleConfig(name); }
+
+    function startMusic(){
+      if(!musicOn) return; initAudio(); if(!audio) return; if(musicTimer) return;
+      setStyle(musicStyle);
+      startPad(STYL.chords[currentBar], STYL.pad);
+      nextNoteTime = audio.currentTime + 0.06;
+      currentStep = 0; currentBar = 0;
+      musicTimer = setInterval(scheduler, lookahead);
+    }
+    function stopMusic(){ if(musicTimer){ clearInterval(musicTimer); musicTimer=null;} stopPad(); }
+
+    function scheduler(){
+      if(!audio) return;
+      const spb = 60/tempoBpm;
+      const stepDur = spb/4;
+      while(nextNoteTime < audio.currentTime + scheduleAhead){
+        scheduleStep(currentStep, nextNoteTime, stepDur);
+        currentStep++;
+        if(currentStep%16===0){
+          currentStep=0; currentBar=(currentBar+1)%4; retunePad(STYL.chords[currentBar], nextNoteTime+0.001);
+        }
+        var swing = 0;
+        if (STYL.swing === 'jazz') { swing = (currentStep%2===1)?0.02:0; }
+        else if (STYL.hats==='eighths' && currentStep%2===1) { swing = 0.002; }
+        nextNoteTime += stepDur + swing;
+      }
+    }
+    function scheduleStep(step, time, stepDur){
+      if(!musicOn) return;
+      // Percussion
+      if (STYL.hats === 'eighths' && step%2===0) scheduleHat(time);
+      if (STYL.hats === 'sixteenths') scheduleHat(time, (step%2===0)?0.12:0.1);
+      if (STYL.hats === 'ride') scheduleRide(time, step);
+      if (STYL.snareType === 'snare' && STYL.snares.indexOf(step) !== -1) scheduleSnare(time);
+      if (STYL.snareType === 'brush' && (step===4 || step===12)) scheduleBrush(time);
+      const kp = STYL.kicks[currentBar] || [];
+      if (kp.indexOf(step) !== -1) scheduleKick(time);
+      // Bass
+      if (STYL.bass === 'pulse' && (step%4===0)) scheduleBass(time, STYL.chords[currentBar][0], 'pulse');
+      if (STYL.bass === 'arp' && (step%4===0)) scheduleArp(time, STYL.chords[currentBar]);
+      if (STYL.bass === 'walking' && (step%4===0)) scheduleUprightBass(time, STYL.chords[currentBar][0], (step/4)|0);
+      // Lead
+      if (melodyOn && (step%4===0)) {
+        const chord = STYL.chords[currentBar];
+        const pick = Math.random();
+        const note = chord[ (pick<0.5)?1 : (pick<0.8?2:0) ];
+        scheduleLead(note, time+0.006*(Math.random()*2), stepDur*(0.95+Math.random()*0.1), STYL.lead);
+      }
+    }
+
+    function hz(n){ return NOTE_FREQ[n] || 440; }
+
+    function scheduleKick(time,lvl=1.0){
+      try{
+        const o=audio.createOscillator(); const g=audio.createGain(); const f=audio.createBiquadFilter();
+        o.type='sine'; o.frequency.setValueAtTime(120,time); o.frequency.exponentialRampToValueAtTime(55,time+0.1);
+        g.gain.setValueAtTime(0.0001,time); g.gain.exponentialRampToValueAtTime(0.5*musicVolume*lvl,time+0.01); g.gain.exponentialRampToValueAtTime(0.0001,time+0.28);
+        f.type='lowpass'; f.frequency.setValueAtTime(800,time);
+        o.connect(g).connect(f).connect(musicGain); o.start(time); o.stop(time+0.35);
+        if(padDuck){ padDuck.gain.cancelScheduledValues(time); padDuck.gain.setValueAtTime(padDuck.gain.value,time); padDuck.gain.linearRampToValueAtTime(0.85,time+0.03); padDuck.gain.linearRampToValueAtTime(1.0,time+0.2); }
+      }catch{}
+    }
+    function scheduleSnare(time){
+      try{
+        const src=audio.createBufferSource(); src.buffer=noiseBuf;
+        const bp=audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(1800,time); bp.Q.value=0.6;
+        const hp=audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(700,time);
+        const g=audio.createGain(); g.gain.setValueAtTime(0.0001,time); g.gain.exponentialRampToValueAtTime(0.35*musicVolume,time+0.005); g.gain.exponentialRampToValueAtTime(0.0001,time+0.18);
+        src.connect(bp).connect(hp).connect(g).connect(musicGain); src.start(time); src.stop(time+0.2);
+      }catch{}
+    }
+    function scheduleBrush(time){
+      try{
+        const src=audio.createBufferSource(); src.buffer=noiseBuf;
+        const bp=audio.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(2200,time); bp.Q.value=0.35;
+        const g=audio.createGain(); g.gain.setValueAtTime(0.0001,time); g.gain.exponentialRampToValueAtTime(0.25*musicVolume,time+0.02); g.gain.exponentialRampToValueAtTime(0.0001,time+0.22);
+        src.connect(bp).connect(g).connect(musicGain); src.start(time); src.stop(time+0.25);
+      }catch{}
+    }
+    function scheduleHat(time, level=0.18){
+      try{
+        const src=audio.createBufferSource(); src.buffer=noiseBuf;
+        const hp=audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(8000,time);
+        const g=audio.createGain(); g.gain.setValueAtTime(0.0001,time); g.gain.exponentialRampToValueAtTime(level*musicVolume,time+0.005); g.gain.exponentialRampToValueAtTime(0.0001,time+0.05);
+        src.connect(hp).connect(g).connect(musicGain); src.start(time); src.stop(time+0.06);
+      }catch{}
+    }
+    function scheduleRide(time, step){
+      // Ding ding-da ding pattern ~ steps: 0,4,(7),8,12
+      const hits = (step===0 || step===4 || step===7 || step===8 || step===12);
+      if (!hits) return;
+      try{
+        // Bell partial (triangle around 2k) + bright noise tick
+        const o=audio.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(2000, time);
+        const g=audio.createGain(); g.gain.setValueAtTime(0.0001,time); g.gain.exponentialRampToValueAtTime(0.12*musicVolume, time+0.01); g.gain.exponentialRampToValueAtTime(0.0001, time+0.18);
+        const lp=audio.createBiquadFilter(); lp.type='highpass'; lp.frequency.setValueAtTime(1600,time);
+        o.connect(g).connect(lp).connect(musicGain); o.start(time); o.stop(time+0.2);
+        const src=audio.createBufferSource(); src.buffer=noiseBuf; const hp=audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(6000,time);
+        const g2=audio.createGain(); g2.gain.setValueAtTime(0.0001,time); g2.gain.exponentialRampToValueAtTime(0.08*musicVolume,time+0.005); g2.gain.exponentialRampToValueAtTime(0.0001,time+0.05);
+        src.connect(hp).connect(g2).connect(musicGain); src.start(time); src.stop(time+0.06);
+      }catch{}
+    }
+    function scheduleLead(noteName, time, dur, type){
+      try{
+        const f0 = hz(noteName);
+        const o=audio.createOscillator(); const g=audio.createGain(); const lp=audio.createBiquadFilter();
+        o.type = (type==='saw')?'sawtooth':(type==='square'?'square':'triangle');
+        o.frequency.setValueAtTime(f0, time);
+        lp.type='lowpass'; lp.frequency.setValueAtTime(type==='saw'?1600:1200, time);
+        g.gain.setValueAtTime(0.0001, time); g.gain.exponentialRampToValueAtTime(0.18*musicVolume, time+0.01); g.gain.exponentialRampToValueAtTime(0.0001, time+Math.min(0.35, dur));
+        o.connect(lp).connect(g).connect(musicGain); o.start(time); o.stop(time+Math.min(0.45, dur+0.1));
+      }catch{}
+    }
+    function scheduleBass(time, rootName, mode){
+      try{
+        const o=audio.createOscillator(); const g=audio.createGain(); const f=audio.createBiquadFilter();
+        o.type = (mode==='pulse')?'square':'sawtooth';
+        const base = hz(rootName)/2;
+        o.frequency.setValueAtTime(base, time);
+        f.type='lowpass'; f.frequency.setValueAtTime(400, time);
+        g.gain.setValueAtTime(0.0001, time); g.gain.exponentialRampToValueAtTime(0.25*musicVolume, time+0.02); g.gain.exponentialRampToValueAtTime(0.0001, time+0.35);
+        o.connect(g).connect(f).connect(musicGain); o.start(time); o.stop(time+0.4);
+      }catch{}
+    }
+    function scheduleUprightBass(time, rootName, beat){
+      try{
+        const base = hz(rootName)/2;
+        let f = base;
+        if (beat === 1) f = base*1.5; // fifth
+        else if (beat === 2) f = base*2.0; // octave
+        else if (beat === 3) f = base*1.35; // sixth-ish approach
+        while (f > 220) f *= 0.5; // keep it in upright range
+        const o=audio.createOscillator(); o.type='triangle';
+        const g=audio.createGain(); const lp=audio.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(500, time);
+        // slight pitch drop for pluck
+        o.frequency.setValueAtTime(f*1.02, time); o.frequency.linearRampToValueAtTime(f, time+0.08);
+        g.gain.setValueAtTime(0.0001, time); g.gain.exponentialRampToValueAtTime(0.28*musicVolume, time+0.02); g.gain.exponentialRampToValueAtTime(0.0001, time+0.32);
+        o.connect(g).connect(lp).connect(musicGain); o.start(time); o.stop(time+0.35);
+        // finger noise
+        const src=audio.createBufferSource(); src.buffer=noiseBuf; const hp=audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(1500, time);
+        const g2=audio.createGain(); g2.gain.setValueAtTime(0.0001, time); g2.gain.exponentialRampToValueAtTime(0.05*musicVolume, time+0.01); g2.gain.exponentialRampToValueAtTime(0.0001, time+0.06);
+        src.connect(hp).connect(g2).connect(musicGain); src.start(time); src.stop(time+0.07);
+      }catch{}
+    }
+    function scheduleArp(time, chord){
+      try{
+        const seq = [0,1,2,1];
+        let tt = time;
+        for (let i=0;i<seq.length;i++) {
+          scheduleLead(chord[seq[i]], tt, 0.12, 'square');
+          tt += 0.06;
+        }
+      }catch{}
+    }
+
+    // Pad engine
+    function startPad(chord, padType){
+      try{
+        if(padNodes) return;
+        const duck=audio.createGain(); duck.gain.value=1.0; padDuck=duck;
+        const g=audio.createGain(); g.gain.setValueAtTime(0.0001,audio.currentTime);
+        const lp=audio.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=(padType==='square')?1200:1500; lp.Q.value=0.2;
+        duck.connect(g).connect(lp).connect(musicGain);
+        const freqs = triad(chord);
+        const lfo=audio.createOscillator(); const lfoGain=audio.createGain(); lfoGain.gain.value=2.5; lfo.frequency.value=padType==='square'?0.18:0.28; lfo.connect(lfoGain);
+        const oscs=freqs.map(function(f){
+          const o=audio.createOscillator(); o.type=(padType==='square')?'square':'sawtooth'; o.frequency.value=f;
+          const det=audio.createGain(); det.gain.value=1; lfoGain.connect(det); det.connect(o.detune); o.connect(duck); o.start(); return o;
+        });
+        const now=audio.currentTime; g.gain.linearRampToValueAtTime(0.10*musicVolume, now+1.0);
+        lfo.start();
+        padNodes={ oscs:oscs, g:g, lp:lp, lfo:lfo, lfoGain:lfoGain, duck:duck };
+      }catch{}
+    }
+    function stopPad(){
+      if(!padNodes) return;
+      try{
+        const now=audio.currentTime;
+        padNodes.g.gain.linearRampToValueAtTime(0.0001, now+0.6);
+        setTimeout(function(){
+          try{ padNodes.oscs.forEach(function(o){ o.stop(); }); padNodes.lfo.stop(); }catch{}
+          padNodes=null; padDuck=null;
+        },650);
+      }catch{}
+    }
+    function retunePad(chord, when){
+      if(!padNodes || !audio) return;
+      try{
+        const freqs=triad(chord);
+        padNodes.oscs.forEach(function(o,i){
+          o.frequency.cancelScheduledValues(when);
+          o.frequency.setValueAtTime(o.frequency.value, when);
+          o.frequency.linearRampToValueAtTime(freqs[i%freqs.length], when+0.15);
+        });
+      }catch{}
+    }
+    function triad(ch){ const c = (ch.length>=3)?[ch[0], ch[1], ch[2]]:[ch[0], ch[1]||ch[0], ch[2]||ch[1]||ch[0]]; return [hz(c[0]), hz(c[1]), hz(c[2])]; }
+
+    // Vinyl
+    function startVinyl(){ if(!vinylOn)return; initAudio(); if(!audio)return; if(!vinylGain)return; try{ if(!hissSrc){ hissSrc=audio.createBufferSource(); hissSrc.buffer=noiseBuf; hissSrc.loop=true; hissFilter=audio.createBiquadFilter(); hissFilter.type='bandpass'; hissFilter.frequency.value=3500; hissFilter.Q.value=0.6; const g=audio.createGain(); g.gain.value=0.08*vinylVolume; hissSrc.connect(hissFilter).connect(g).connect(vinylGain); hissSrc.start(); } scheduleCrackle(); }catch{} }
+    function stopVinyl(){ try{ if(hissSrc){ try{ hissSrc.stop(); }catch{} hissSrc=null; } if(crackleTimeout){ clearTimeout(crackleTimeout); crackleTimeout=null; } }catch{} }
+    function scheduleCrackle(){ if(!vinylOn||!audio)return; const next=80+Math.random()*450; crackleTimeout=setTimeout(function(){ spawnCracklePop(); if(Math.random()<0.3) setTimeout(spawnCracklePop, 25+Math.random()*50); scheduleCrackle(); }, next); }
+    function spawnCracklePop(){ if(!audio)return; try{ const t=audio.currentTime+0.002; const src=audio.createBufferSource(); src.buffer=noiseBuf; const hp=audio.createBiquadFilter(); hp.type='highpass'; hp.frequency.setValueAtTime(2500,t); const g=audio.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.08*vinylVolume,t+0.002); g.gain.exponentialRampToValueAtTime(0.0001,t+0.02); const pan=(audio.createStereoPanner?audio.createStereoPanner():null); if(pan){ pan.pan.value=(Math.random()*2-1)*0.4; src.connect(hp).connect(g).connect(pan).connect(vinylGain);} else { src.connect(hp).connect(g).connect(vinylGain);} src.start(t); src.stop(t+0.03);}catch{} }
+    function playUnlockJingle() {
+      if (!sfxOn) return; initAudio(); if (!audio) return;
+      const t = audio.currentTime;
+      const seq = [659.25, 783.99, 987.77];
+      let tt = t;
+      for (let i=0;i<seq.length;i++){ tt = beep(seq[i], 'square', 0.10, tt + 0.02, 0.20); }
+    }
+    function beep(freq, type, dur, tstart, gain) {
+      if (!sfxOn) return; initAudio(); if (!audio) return;
+      const start = tstart || audio.currentTime; const end = start + (dur || 0.08);
+      try { const osc = audio.createOscillator(); const g = audio.createGain(); osc.type = type || 'square'; osc.frequency.setValueAtTime(freq || 440, start);
+        const gmax = Math.max(0.0001, (gain || 0.15) * sfxVolume); g.gain.setValueAtTime(0.0001, start); g.gain.exponentialRampToValueAtTime(gmax, start + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, end);
+        osc.connect(g).connect(sfxGain); osc.start(start); osc.stop(end);} catch {}
+      return end;
+    }
+
+    // ===== Init skins UI and equipped defaults =====
+    function skinCardSetup(){ renderSkins(); applyEquipped(); updateTabSummary(); }
+    skinCardSetup();
+
+    // ===== Initial sizing/draw =====
     fitSquare();
-    window.addEventListener('pageshow', () => { fitSquare(); setTimeout(draw, 0); }, { passive: true });
-    requestAnimationFrame(() => { draw(); });
+    window.addEventListener('pageshow', () => { fitSquare(); setTimeout(() => { if (ctx) draw(); }, 0); }, { passive: true });
+    if (ctx) requestAnimationFrame(() => { draw(); });
   </script>
 </body>
 </html>
