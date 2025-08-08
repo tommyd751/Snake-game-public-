@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
-  <title>Snake – Single File (Drag D‑Pad)</title>
+  <title>Snake — Drag Controls + Textures + High Score</title>
   <style>
     :root {
       --bg: #0b1020;
-      --panel: #121a33;
+      --panelA: #111a33;
+      --panelB: #0f1830;
       --text: #e6edf6;
       --muted: #9fb0c7;
       --accent: #22c55e;
       --warning: #f59e0b;
       --border: #213055;
-      --dkey: 48px; /* smaller buttons */
     }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -25,6 +25,7 @@
       display: grid;
       place-items: center;
       padding: 16px;
+      -webkit-tap-highlight-color: transparent;
     }
     .app {
       width: 100%;
@@ -34,19 +35,22 @@
       gap: 16px;
     }
     @media (min-width: 900px) {
-      .app { grid-template-columns: 1fr 320px; }
+      .app { grid-template-columns: 1fr 340px; }
     }
     .card {
-      background: linear-gradient(180deg, #111a33, #0f1830);
+      background: linear-gradient(180deg, var(--panelA), var(--panelB));
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 16px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.35);
     }
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .stack { display: grid; gap: 8px; }
+    .title { font-weight: 800; letter-spacing: .3px; font-size: 18px; }
+    .small { color: var(--muted); font-size: 12px; }
     .pill { background: #162448; border: 1px solid var(--border); border-radius: 12px; padding: 6px 10px; font-size: 14px; color: var(--text); }
     .btn {
-      border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 600; cursor: pointer;
+      border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer;
       color: #0a0f1f; background: #dbeafe;
       box-shadow: 0 2px 0 rgba(255,255,255,0.08) inset, 0 6px 16px rgba(0,0,0,0.25);
     }
@@ -54,49 +58,17 @@
     .btn:active { transform: translateY(1px); }
     .btn-start { background: var(--accent); }
     .btn-pause { background: var(--warning); }
-    .canvas-wrap { aspect-ratio: 1 / 1; width: 100%; max-width: 620px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background:#000; }
+    .btn-danger { background: #fca5a5; }
+    .canvas-wrap { aspect-ratio: 1 / 1; width: 100%; max-width: 620px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background:#000; touch-action: none; }
     canvas { display:block; width:100%; height:100%; }
     .controls { display: grid; gap: 14px; }
     .ctrl { display:flex; align-items:center; justify-content: space-between; gap: 12px; }
     .ctrl label { font-size: 14px; color: var(--muted); }
     .ctrl input[type="color"] {
-      width: 42px; height: 30px; padding:0; background: transparent; border: 1px solid var(--border); border-radius: 8px;
+      width: 46px; height: 32px; padding:0; background: transparent; border: 1px solid var(--border); border-radius: 8px;
     }
     .ctrl input[type="range"] { width: 100%; }
-    .small { color: var(--muted); font-size: 12px; text-align: center; }
-    .title { font-weight: 700; letter-spacing: .3px; font-size: 18px; margin-bottom: 10px; }
-    .stack { display: grid; gap: 10px; }
-
-    /* On-screen D-Pad (below the board, not overlaying) */
-    .dpad-wrap { margin-top: 10px; display: grid; place-items: center; }
-    .dpad {
-      display: grid;
-      grid-template-columns: var(--dkey) var(--dkey) var(--dkey);
-      grid-template-rows: var(--dkey) var(--dkey) var(--dkey);
-      gap: 8px;
-      user-select: none; -webkit-user-select: none;
-      touch-action: none; /* enables drag between buttons */
-    }
-    .dkey {
-      width: var(--dkey);
-      height: var(--dkey);
-      border-radius: 12px;
-      background: linear-gradient(180deg, #e2e8f0, #cbd5e1);
-      border: 1px solid #94a3b8;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      display: grid;
-      place-items: center;
-      font-weight: 800;
-      color: #0a0f1f;
-      opacity: 0.95;
-    }
-    .dkey:active { transform: translateY(1px); }
-    .dkey.blank { visibility: hidden; }
-    .dkey svg { width: 22px; height: 22px; }
-    @media (max-width: 420px) {
-      :root { --dkey: 44px; }
-      .dkey svg { width: 20px; height: 20px; }
-    }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0f172a; border:1px solid #1e293b; padding:2px 6px; border-radius:6px; }
   </style>
 </head>
 <body>
@@ -104,9 +76,9 @@
     <div class="card">
       <div class="row" style="margin-bottom:10px">
         <div class="stack">
-          <div class="title">Snake — Single File (Drag D‑Pad)</div>
-          <div class="small" style="text-align:left">
-            Controls: Arrow keys / WASD • Space pause • R restart • D‑pad supports tap and drag
+          <div class="title">Snake — Drag to Steer</div>
+          <div class="small">
+            Drag or swipe on the board to change direction (no buttons). Keyboard also works: <span class="kbd">WASD</span>/<span class="kbd">↑↓←→</span> · Space=pause · R=restart.
           </div>
         </div>
         <div class="row" style="gap:8px">
@@ -119,44 +91,14 @@
       <div class="row" style="margin-bottom:10px">
         <span class="pill"><strong>Score:</strong> <span id="score">0</span></span>
         <span class="pill"><strong>Best:</strong> <span id="best">0</span></span>
+        <button id="resetBest" class="btn btn-danger" title="Clear saved high score">Reset High Score</button>
       </div>
 
       <div class="canvas-wrap">
         <canvas id="game" width="600" height="600" aria-label="Snake game canvas"></canvas>
       </div>
-
-      <!-- On-screen D-Pad BELOW the board -->
-      <div class="dpad-wrap">
-        <div class="dpad" id="dpad" aria-label="On-screen controls">
-          <button class="dkey blank" tabindex="-1" aria-hidden="true"></button>
-          <button class="dkey" data-dir="0,-1" aria-label="Up" title="Up">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>
-          </button>
-          <button class="dkey blank" tabindex="-1" aria-hidden="true"></button>
-
-          <button class="dkey" data-dir="-1,0" aria-label="Left" title="Left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <button class="dkey blank" tabindex="-1" aria-hidden="true"></button>
-          <button class="dkey" data-dir="1,0" aria-label="Right" title="Right">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-
-          <button class="dkey blank" tabindex="-1" aria-hidden="true"></button>
-          <button class="dkey" data-dir="0,1" aria-label="Down" title="Down">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <button class="dkey blank" tabindex="-1" aria-hidden="true"></button>
-        </div>
-        <div class="small">Tip: press and drag across arrows to steer.</div>
+      <div class="small" style="margin-top:8px;text-align:center">
+        Tip: Keep your finger on the board and nudge in the direction you want to turn—dragging across corners works too.
       </div>
     </div>
 
@@ -191,14 +133,15 @@
   </div>
 
   <script>
-    // --- Config ---
+    // ===== Config =====
     const COLS = 25;
     const ROWS = 25;
-    const TILE = 24; // pixels
+    const TILE = 24; // logical pixels per tile
     const WIDTH = COLS * TILE;
     const HEIGHT = ROWS * TILE;
+    const HS_KEY = 'snake_highscore_v3';
 
-    // --- DOM ---
+    // ===== DOM =====
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
@@ -206,28 +149,40 @@
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
     const restartBtn = document.getElementById('restartBtn');
+    const resetBestBtn = document.getElementById('resetBest');
     const snakeColorInput = document.getElementById('snakeColor');
     const foodColorInput = document.getElementById('foodColor');
     const bgColorInput = document.getElementById('bgColor');
     const gridToggle = document.getElementById('gridToggle');
     const speedInput = document.getElementById('speed');
     const speedVal = document.getElementById('speedVal');
-    const randomizeBtn = document.getElementById('randomize');
-    const dpad = document.getElementById('dpad');
+    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 
-    // --- State ---
+    // Scale canvas for crispness
+    function resizeCanvas() {
+      const w = WIDTH * dpr;
+      const h = HEIGHT * dpr;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w; canvas.height = h;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw(); // redraw after resize
+    }
+    resizeCanvas();
+
+    // ===== State =====
     let snake = [
       { x: 8, y: 12 },
       { x: 7, y: 12 },
       { x: 6, y: 12 },
     ];
     let dir = { x: 1, y: 0 };
-    let lastDir = { x: 1, y: 0 };
+    let lastDir = { x: 1, y: 0 }; // last applied move direction (for 180° guard)
     let food = randFood(new Set(snake.map(s => key(s.x, s.y))));
     let isRunning = false;
     let isGameOver = false;
     let score = 0;
-    let high = Number(localStorage.getItem('snake_highscore') || 0);
+    let high = Number(localStorage.getItem(HS_KEY) || 0);
     bestEl.textContent = high;
 
     let tickHandle = null;
@@ -238,7 +193,16 @@
     let speed = Number(speedInput.value);
     speedVal.textContent = speed;
 
-    // --- Utils ---
+    // Gesture state
+    let dragging = false;
+    let gestureAnchor = null; // {x,y} logical coordinates where the last turn was committed
+    let gesturePos = null;    // current pointer pos for indicator
+
+    // Textures (patterns)
+    let snakePattern = makeSnakePattern(snakeColor);
+    let snackPattern = makeSnackPattern(foodColor);
+
+    // ===== Utils =====
     function key(x, y) { return x + ',' + y; }
     function randFood(snakeSet) {
       while (true) {
@@ -247,13 +211,63 @@
         if (!snakeSet.has(key(x, y))) return { x, y };
       }
     }
+    function shade(hex, amt) {
+      // amt in range [-100..100]; positive -> lighten, negative -> darken
+      let c = hex.replace('#','');
+      if (c.length === 3) c = c.split('').map(ch => ch+ch).join('');
+      const num = parseInt(c, 16);
+      let r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
+      r = Math.min(255, Math.max(0, r + Math.round(2.55 * amt)));
+      g = Math.min(255, Math.max(0, g + Math.round(2.55 * amt)));
+      b = Math.min(255, Math.max(0, b + Math.round(2.55 * amt)));
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
     function randomHex() {
       const n = Math.floor(Math.random() * 0xffffff);
       return '#' + n.toString(16).padStart(6, '0');
     }
     function haptic(ms=8) { if ('vibrate' in navigator) navigator.vibrate(ms); }
 
-    // --- Game control ---
+    // ===== Textures / Patterns =====
+    function makeSnakePattern(color) {
+      const off = document.createElement('canvas');
+      off.width = 16; off.height = 16;
+      const c = off.getContext('2d');
+      // Transparent base
+      c.clearRect(0,0,16,16);
+      // Diagonal stripes
+      c.strokeStyle = shade(color, -35);
+      c.lineWidth = 3;
+      c.globalAlpha = 0.35;
+      c.beginPath(); c.moveTo(-4, 16); c.lineTo(16, -4); c.stroke();
+      c.beginPath(); c.moveTo(0, 20); c.lineTo(20, 0); c.stroke();
+      c.beginPath(); c.moveTo(-8, 12); c.lineTo(12, -8); c.stroke();
+      c.globalAlpha = 1;
+      return ctx.createPattern(off, 'repeat');
+    }
+    function makeSnackPattern(color) {
+      const off = document.createElement('canvas');
+      off.width = 12; off.height = 12;
+      const c = off.getContext('2d');
+      c.clearRect(0,0,12,12);
+      // Polka dots
+      c.fillStyle = shade(color, 40);
+      c.globalAlpha = 0.35;
+      for (let y=2; y<12; y+=6) {
+        for (let x=2; x<12; x+=6) {
+          c.beginPath(); c.arc(x, y, 1.2, 0, Math.PI*2); c.fill();
+        }
+      }
+      c.globalAlpha = 1;
+      return ctx.createPattern(off, 'repeat');
+    }
+    function refreshPatterns() {
+      snakePattern = makeSnakePattern(snakeColor);
+      snackPattern = makeSnackPattern(foodColor);
+      draw();
+    }
+
+    // ===== Game control =====
     function start() { if (!isGameOver && !isRunning) { isRunning = true; schedule(); } }
     function pause() { isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; draw(); }
     function restart() {
@@ -277,14 +291,18 @@
       if (!ate) snake.pop();
       if (ate) {
         score += 1; scoreEl.textContent = score;
-        if (score > high) { high = score; bestEl.textContent = high; localStorage.setItem('snake_highscore', String(high)); }
+        if (score > high) { high = score; bestEl.textContent = high; localStorage.setItem(HS_KEY, String(high)); }
         const snakeSet = new Set(snake.map(s => key(s.x, s.y))); food = randFood(snakeSet);
       }
       draw();
     }
-    function endGame() { isGameOver = true; isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; draw(); }
+    function endGame() {
+      isGameOver = true; isRunning = false;
+      if (tickHandle) clearInterval(tickHandle); tickHandle = null;
+      draw();
+    }
 
-    // --- Keyboard input ---
+    // ===== Input: Keyboard =====
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       if ([ 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'spacebar' ].includes(k)) e.preventDefault();
@@ -296,99 +314,198 @@
       else if (k === 'r') { restart(); }
     }, { passive: false });
 
-    // --- D-pad: tap + drag between buttons ---
-    // Mark buttons with data-dir="dx,dy"
-    dpad.addEventListener('click', (e) => {
-      const btn = e.target.closest('.dkey'); if (!btn) return;
-      const dirStr = btn.dataset.dir; if (!dirStr) return;
-      const [dx, dy] = dirStr.split(',').map(Number);
-      trySetDir(dx, dy);
-    });
-
-    let dragging = false;
-    let lastDragDir = null;
-
-    function onPointerDown(e) {
-      const btn = e.target.closest('.dkey'); if (!btn) return;
-      const dirStr = btn.dataset.dir; if (!dirStr) return;
+    // ===== Input: Drag anywhere on the canvas =====
+    // Logic: as you drag, when movement from the last committed 'gestureAnchor' exceeds threshold,
+    // pick the dominant axis and set direction (guarding against 180° turns).
+    canvas.addEventListener('pointerdown', (e) => {
       dragging = true;
-      applyDirStr(dirStr);
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp, { passive: false, once: true });
-      window.addEventListener('pointercancel', onPointerUp, { passive: false, once: true });
+      gestureAnchor = getCanvasPos(e);
+      gesturePos = gestureAnchor;
+      canvas.setPointerCapture(e.pointerId);
       e.preventDefault();
-    }
-    function onPointerMove(e) {
-      if (!dragging) return;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const btn = el ? el.closest('.dkey') : null;
-      const dirStr = btn ? btn.dataset.dir : null;
-      if (!dirStr || dirStr === lastDragDir) return;
-      applyDirStr(dirStr);
-      e.preventDefault();
-    }
-    function onPointerUp(e) {
-      dragging = false;
-      lastDragDir = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      // pointerup listener is once:true so auto-removed
-    }
-    function applyDirStr(s) {
-      if (!s) return;
-      lastDragDir = s;
-      const [dx, dy] = s.split(',').map(Number);
-      trySetDir(dx, dy);
-    }
+      if (!isRunning && !isGameOver) start();
+    }, { passive: false });
 
-    dpad.addEventListener('pointerdown', onPointerDown, { passive: false });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      gesturePos = getCanvasPos(e);
+      const dx = gesturePos.x - gestureAnchor.x;
+      const dy = gesturePos.y - gestureAnchor.y;
+      const ax = Math.abs(dx), ay = Math.abs(dy);
+      const THRESH = 12; // pixels to trigger a turn
+      if (ax < THRESH && ay < THRESH) { draw(); return; }
+      // Determine intended direction based on dominant axis
+      let ndx = 0, ndy = 0;
+      if (ax > ay) ndx = dx > 0 ? 1 : -1; else ndy = dy > 0 ? 1 : -1;
+      const changed = trySetDir(ndx, ndy);
+      if (changed) {
+        haptic(8);
+        // reset anchor so additional movement requires a fresh threshold
+        gestureAnchor = { ...gesturePos };
+      }
+      draw();
+      e.preventDefault();
+    }, { passive: false });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false; gestureAnchor = null; gesturePos = null;
+      try { canvas.releasePointerCapture(e.pointerId); } catch {}
+      draw();
+    }
+    canvas.addEventListener('pointerup', endDrag, { passive: true });
+    canvas.addEventListener('pointercancel', endDrag, { passive: true });
+    canvas.addEventListener('pointerleave', endDrag, { passive: true });
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      // convert to logical units (account for DPR transform)
+      const x = (e.clientX - rect.left) / (rect.width) * WIDTH;
+      const y = (e.clientY - rect.top) / (rect.height) * HEIGHT;
+      return { x, y };
+    }
 
     function trySetDir(x, y) {
-      if (lastDir.x + x === 0 && lastDir.y + y === 0) return; // block 180°
+      if (x === 0 && y === 0) return false;
+      if (lastDir.x + x === 0 && lastDir.y + y === 0) return false; // block 180°
+      // If we're not moving yet (game hasn't ticked), also block immediate reverse of current dir.
+      if (dir.x + x === 0 && dir.y + y === 0) return false;
       dir = { x, y };
-      haptic(8);
-      if (!isRunning && !isGameOver) start();
+      return true;
     }
 
-    // --- Drawing ---
+    // ===== Drawing =====
     function draw() {
-      ctx.fillStyle = bgColor; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      // background
+      ctx.save();
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      // grid
       if (gridOn) {
-        ctx.save(); ctx.globalAlpha = 0.2; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
-        for (let x = 0; x <= WIDTH; x += TILE) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, HEIGHT); ctx.stroke(); }
-        for (let y = 0; y <= HEIGHT; y += TILE) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(WIDTH, y + 0.5); ctx.stroke(); }
-        ctx.restore();
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= WIDTH; x += TILE) {
+          ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, HEIGHT); ctx.stroke();
+        }
+        for (let y = 0; y <= HEIGHT; y += TILE) {
+          ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(WIDTH, y + 0.5); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
       }
+
+      // snack with texture + glow
       drawFood(food.x, food.y, foodColor);
+
+      // snake (head last to draw eyes on top)
       for (let i = snake.length - 1; i >= 0; i--) {
         const seg = snake[i]; const isHead = i === 0;
         drawBlock(seg.x, seg.y, snakeColor, isHead);
       }
-      if (isGameOver) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-        ctx.font = 'bold 28px Inter, system-ui, Segoe UI, Roboto'; ctx.fillText('Game Over', WIDTH / 2, HEIGHT / 2 - 12);
-        ctx.font = '16px Inter, system-ui, Segoe UI, Roboto'; ctx.fillText('Press R to restart', WIDTH / 2, HEIGHT / 2 + 16);
-        ctx.restore();
+
+      // drag indicator
+      if (dragging && gestureAnchor && gesturePos) {
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(gestureAnchor.x, gestureAnchor.y);
+        ctx.lineTo(gesturePos.x, gesturePos.y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // end cap
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(gesturePos.x, gesturePos.y, 3.5, 0, Math.PI*2); ctx.fill();
       }
+
+      if (isGameOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 28px Inter, system-ui, Segoe UI, Roboto';
+        ctx.fillText('Game Over', WIDTH / 2, HEIGHT / 2 - 12);
+        ctx.font = '16px Inter, system-ui, Segoe UI, Roboto';
+        ctx.fillText('Press R to restart', WIDTH / 2, HEIGHT / 2 + 16);
+      }
+      ctx.restore();
     }
 
     function drawBlock(gx, gy, color, head=false) {
-      const x = gx * TILE, y = gy * TILE, pad = 2, w = TILE - pad*2, h = TILE - pad*2, r = 5;
-      ctx.fillStyle = color; roundRect(ctx, x + pad, y + pad, w, h, r); ctx.fill();
+      const x = gx * TILE, y = gy * TILE;
+      const pad = 2, w = TILE - pad*2, h = TILE - pad*2, r = 5;
+      // Base gradient (light on top, darker at bottom)
+      const grad = ctx.createLinearGradient(0, y + pad, 0, y + pad + h);
+      grad.addColorStop(0, shade(color, 30));
+      grad.addColorStop(1, shade(color, -15));
+      ctx.fillStyle = grad;
+      roundRectPath(x + pad, y + pad, w, h, r);
+      ctx.fill();
+
+      // Texture overlay
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = snakePattern;
+      roundRectPath(x + pad, y + pad, w, h, r);
+      ctx.fill();
+      ctx.restore();
+
+      // Edge stroke
+      ctx.strokeStyle = shade(color, -40);
+      ctx.lineWidth = 1;
+      roundRectPath(x + pad + 0.5, y + pad + 0.5, w - 1, h - 1, r - 1);
+      ctx.stroke();
+
       if (head) {
-        ctx.fillStyle = '#000'; const eye = Math.max(2, Math.floor(TILE*0.12)); const off = Math.max(3, Math.floor(TILE*0.22));
+        // Eyes
+        ctx.fillStyle = '#000';
+        const eye = Math.max(2, Math.floor(TILE * 0.12));
+        const off = Math.max(3, Math.floor(TILE * 0.22));
         ctx.beginPath(); ctx.arc(x + TILE/2 - off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(x + TILE/2 + off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
+        // Subtle highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.beginPath(); ctx.arc(x + TILE/2 - off - 1, y + TILE/2 - off - 1, Math.max(1, eye-1), 0, Math.PI*2); ctx.fill();
       }
     }
+
     function drawFood(gx, gy, color) {
-      const x = gx*TILE + TILE/2, y = gy*TILE + TILE/2, r = (TILE*0.6)/2;
-      ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = 12; ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      const cx = gx * TILE + TILE/2, cy = gy * TILE + TILE/2;
+      const r = (TILE * 0.6) / 2;
+      // Glow
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+      // Base radial gradient
+      const rg = ctx.createRadialGradient(cx - r*0.35, cy - r*0.35, r*0.3, cx, cy, r);
+      rg.addColorStop(0, shade(color, 30));
+      rg.addColorStop(1, shade(color, -10));
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      // Texture overlay (dots)
+      ctx.save();
+      ctx.globalAlpha = 0.65;
+      ctx.fillStyle = snackPattern;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+      // Fill a rectangle that covers the circle with the pattern
+      ctx.fillRect(cx - r, cy - r, r*2, r*2);
+      ctx.restore();
+
+      // Specular highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.ellipse(cx - r*0.25, cy - r*0.35, r*0.35, r*0.2, -0.5, 0, Math.PI*2); ctx.fill();
+      // Edge
+      ctx.strokeStyle = shade(color, -35);
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
     }
-    function roundRect(ctx, x, y, w, h, r) {
-      const rr = Math.min(r, w/2, h/2);
+
+    function roundRectPath(x, y, w, h, r) {
+      const rr = Math.max(0, Math.min(r, w/2, h/2));
       ctx.beginPath();
       ctx.moveTo(x + rr, y);
       ctx.arcTo(x + w, y, x + w, y + h, rr);
@@ -398,17 +515,29 @@
       ctx.closePath();
     }
 
-    // --- Wire up UI ---
+    // ===== Wire up UI =====
     startBtn.addEventListener('click', start);
     pauseBtn.addEventListener('click', pause);
     restartBtn.addEventListener('click', restart);
+    resetBestBtn.addEventListener('click', () => {
+      localStorage.removeItem(HS_KEY);
+      high = 0;
+      bestEl.textContent = high;
+    });
 
-    snakeColorInput.addEventListener('input', (e) => { snakeColor = e.target.value; draw(); });
-    foodColorInput.addEventListener('input', (e) => { foodColor = e.target.value; draw(); });
+    snakeColorInput.addEventListener('input', (e) => { snakeColor = e.target.value; refreshPatterns(); });
+    foodColorInput.addEventListener('input', (e) => { foodColor = e.target.value; refreshPatterns(); });
     bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; draw(); });
     gridToggle.addEventListener('change', (e) => { gridOn = e.target.checked; draw(); });
     speedInput.addEventListener('input', (e) => { speed = Number(e.target.value); speedVal.textContent = speed; if (isRunning) schedule(); });
-    randomizeBtn.addEventListener('click', () => { snakeColor = randomHex(); foodColor = randomHex(); snakeColorInput.value = snakeColor; foodColorInput.value = foodColor; draw(); });
+    document.getElementById('randomize').addEventListener('click', () => {
+      snakeColor = randomHex(); foodColor = randomHex();
+      snakeColorInput.value = snakeColor; foodColorInput.value = foodColor;
+      refreshPatterns();
+    });
+
+    // Redraw on resize to keep DPR scaling accurate if device zoom changes
+    window.addEventListener('resize', resizeCanvas);
 
     // Initial draw
     draw();
