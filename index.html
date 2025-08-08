@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
-  <title>Snake — Drag Controls + Textures + High Score</title>
+  <title>Snake — Drag + Texture Picker (Compat Fix)</title>
   <style>
     :root {
       --bg: #0b1020;
@@ -35,7 +35,7 @@
       gap: 16px;
     }
     @media (min-width: 900px) {
-      .app { grid-template-columns: 1fr 340px; }
+      .app { grid-template-columns: 1fr 350px; }
     }
     .card {
       background: linear-gradient(180deg, var(--panelA), var(--panelB));
@@ -59,16 +59,19 @@
     .btn-start { background: var(--accent); }
     .btn-pause { background: var(--warning); }
     .btn-danger { background: #fca5a5; }
-    .canvas-wrap { aspect-ratio: 1 / 1; width: 100%; max-width: 620px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background:#000; touch-action: none; }
-    canvas { display:block; width:100%; height:100%; }
+    .canvas-wrap { aspect-ratio: 1 / 1; width: 100%; max-width: 620px; margin: 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background:#101827; /* not pure black so you can see */ touch-action: none; }
+    canvas { display:block; width:100%; height:100%; background:#0b1020; }
     .controls { display: grid; gap: 14px; }
-    .ctrl { display:flex; align-items:center; justify-content: space-between; gap: 12px; }
+    .ctrl { display:grid; grid-template-columns: 1fr auto; align-items:center; gap: 12px; }
     .ctrl label { font-size: 14px; color: var(--muted); }
-    .ctrl input[type="color"] {
-      width: 46px; height: 32px; padding:0; background: transparent; border: 1px solid var(--border); border-radius: 8px;
+    .ctrl input[type="color"], .ctrl select {
+      height: 32px; padding: 4px 8px; background: #0b1226; color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
     }
-    .ctrl input[type="range"] { width: 100%; }
+    .ctrl input[type="color"] { width: 46px; padding:0; }
+    .ctrl input[type="range"] { width: 100%; grid-column: 1 / -1; }
     .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background:#0f172a; border:1px solid #1e293b; padding:2px 6px; border-radius:6px; }
+    .warn { color:#fde68a; font-size:12px; }
   </style>
 </head>
 <body>
@@ -78,8 +81,9 @@
         <div class="stack">
           <div class="title">Snake — Drag to Steer</div>
           <div class="small">
-            Drag or swipe on the board to change direction (no buttons). Keyboard also works: <span class="kbd">WASD</span>/<span class="kbd">↑↓←→</span> · Space=pause · R=restart.
+            Drag or swipe on the board to change direction. Keyboard works: <span class="kbd">WASD</span>/<span class="kbd">↑↓←→</span> · Space=pause · R=restart.
           </div>
+          <div id="compatMsg" class="warn" style="display:none">Compatibility mode on (older mobile browser detected).</div>
         </div>
         <div class="row" style="gap:8px">
           <button id="startBtn" class="btn btn-start">Start</button>
@@ -98,7 +102,7 @@
         <canvas id="game" width="600" height="600" aria-label="Snake game canvas"></canvas>
       </div>
       <div class="small" style="margin-top:8px;text-align:center">
-        Tip: Keep your finger on the board and nudge in the direction you want to turn—dragging across corners works too.
+        Tip: Keep your finger on the board and nudge in the direction you want to turn—continuous drag supported.
       </div>
     </div>
 
@@ -110,8 +114,32 @@
           <input id="snakeColor" type="color" value="#10b981" />
         </div>
         <div class="ctrl">
+          <label for="snakeTex">Snake texture</label>
+          <select id="snakeTex">
+            <option value="stripes" selected>Stripes</option>
+            <option value="metal">Metallic</option>
+            <option value="wood">Wood</option>
+            <option value="carbon">Carbon Fiber</option>
+            <option value="none">None (Solid)</option>
+          </select>
+        </div>
+        <div class="ctrl">
           <label for="foodColor">Snack color</label>
           <input id="foodColor" type="color" value="#ef4444" />
+        </div>
+        <div class="ctrl">
+          <label for="foodTex">Snack texture</label>
+          <select id="foodTex">
+            <option value="dots" selected>Dots</option>
+            <option value="metal">Metallic</option>
+            <option value="wood">Wood</option>
+            <option value="stripes">Candy Stripes</option>
+            <option value="none">None (Solid)</option>
+          </select>
+        </div>
+        <div class="ctrl">
+          <label for="texAlpha">Texture strength: <span id="texAlphaVal">60</span>%</label>
+          <input id="texAlpha" type="range" min="0" max="100" step="5" value="60" />
         </div>
         <div class="ctrl">
           <label for="bgColor">Background</label>
@@ -121,12 +149,12 @@
           <label for="gridToggle">Grid</label>
           <input id="gridToggle" type="checkbox" checked />
         </div>
-        <div class="ctrl" style="flex-direction:column; align-items:stretch">
+        <div class="ctrl">
           <label for="speed">Speed: <span id="speedVal">10</span> ticks/sec</label>
           <input id="speed" type="range" min="5" max="20" step="1" value="10" />
         </div>
-        <div class="row">
-          <button id="randomize" class="btn" style="width:100%">Randomize Colors</button>
+        <div class="ctrl">
+          <button id="randomize" class="btn" style="grid-column: 1 / -1;">Randomize Colors</button>
         </div>
       </div>
     </div>
@@ -134,12 +162,9 @@
 
   <script>
     // ===== Config =====
-    const COLS = 25;
-    const ROWS = 25;
-    const TILE = 24; // logical pixels per tile
-    const WIDTH = COLS * TILE;
-    const HEIGHT = ROWS * TILE;
-    const HS_KEY = 'snake_highscore_v3';
+    const COLS = 25, ROWS = 25, TILE = 24;
+    const WIDTH = COLS * TILE, HEIGHT = ROWS * TILE;
+    const HS_KEY = 'snake_highscore_v5';
 
     // ===== DOM =====
     const canvas = document.getElementById('game');
@@ -156,33 +181,33 @@
     const gridToggle = document.getElementById('gridToggle');
     const speedInput = document.getElementById('speed');
     const speedVal = document.getElementById('speedVal');
-    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+    const texAlphaInput = document.getElementById('texAlpha');
+    const texAlphaVal = document.getElementById('texAlphaVal');
+    const snakeTexSel = document.getElementById('snakeTex');
+    const foodTexSel = document.getElementById('foodTex');
+    const compatMsg = document.getElementById('compatMsg');
 
-    // Scale canvas for crispness
-    function resizeCanvas() {
-      const w = WIDTH * dpr;
-      const h = HEIGHT * dpr;
-      if (canvas.width !== w || canvas.height !== h) {
-        canvas.width = w; canvas.height = h;
-      }
+    // DPI scaling (with fallback if something goes wrong)
+    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+    let useDpr = true;
+    try {
+      // scale canvas for crispness
+      const w = WIDTH * dpr, h = HEIGHT * dpr;
+      canvas.width = w; canvas.height = h;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      draw(); // redraw after resize
+    } catch (e) {
+      // fallback: don't scale
+      useDpr = false;
+      console.warn('DPR scaling disabled:', e);
     }
-    resizeCanvas();
 
     // ===== State =====
-    let snake = [
-      { x: 8, y: 12 },
-      { x: 7, y: 12 },
-      { x: 6, y: 12 },
-    ];
+    let snake = [ {x:8,y:12}, {x:7,y:12}, {x:6,y:12} ];
     let dir = { x: 1, y: 0 };
-    let lastDir = { x: 1, y: 0 }; // last applied move direction (for 180° guard)
+    let lastDir = { x: 1, y: 0 };
     let food = randFood(new Set(snake.map(s => key(s.x, s.y))));
-    let isRunning = false;
-    let isGameOver = false;
-    let score = 0;
-    let high = Number(localStorage.getItem(HS_KEY) || 0);
+    let isRunning = false, isGameOver = false;
+    let score = 0, high = Number(localStorage.getItem(HS_KEY) || 0);
     bestEl.textContent = high;
 
     let tickHandle = null;
@@ -191,16 +216,20 @@
     let foodColor = foodColorInput.value;
     let gridOn = gridToggle.checked;
     let speed = Number(speedInput.value);
-    speedVal.textContent = speed;
+    let texAlpha = Number(texAlphaInput.value) / 100;
+    speedVal.textContent = speed; texAlphaVal.textContent = Math.round(texAlpha * 100);
 
     // Gesture state
-    let dragging = false;
-    let gestureAnchor = null; // {x,y} logical coordinates where the last turn was committed
-    let gesturePos = null;    // current pointer pos for indicator
+    let dragging = false, gestureAnchor = null, gesturePos = null;
 
-    // Textures (patterns)
-    let snakePattern = makeSnakePattern(snakeColor);
-    let snackPattern = makeSnackPattern(foodColor);
+    // Texture type
+    let snakeTexType = snakeTexSel.value, foodTexType = foodTexSel.value;
+    let snakePattern = makePattern(snakeTexType, snakeColor);
+    let snackPattern = makePattern(foodTexType, foodColor);
+
+    // Detect older mobile (no Pointer Events)
+    const hasPointer = 'onpointerdown' in window;
+    if (!hasPointer) compatMsg.style.display = 'block';
 
     // ===== Utils =====
     function key(x, y) { return x + ',' + y; }
@@ -212,58 +241,64 @@
       }
     }
     function shade(hex, amt) {
-      // amt in range [-100..100]; positive -> lighten, negative -> darken
-      let c = hex.replace('#','');
-      if (c.length === 3) c = c.split('').map(ch => ch+ch).join('');
+      let c = hex.replace('#',''); if (c.length === 3) c = c.split('').map(ch => ch+ch).join('');
       const num = parseInt(c, 16);
-      let r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
-      r = Math.min(255, Math.max(0, r + Math.round(2.55 * amt)));
-      g = Math.min(255, Math.max(0, g + Math.round(2.55 * amt)));
-      b = Math.min(255, Math.max(0, b + Math.round(2.55 * amt)));
-      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+      let r = (num>>16)&255, g=(num>>8)&255, b=num&255;
+      r = Math.min(255, Math.max(0, r + Math.round(2.55*amt)));
+      g = Math.min(255, Math.max(0, g + Math.round(2.55*amt)));
+      b = Math.min(255, Math.max(0, b + Math.round(2.55*amt)));
+      return '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
     }
-    function randomHex() {
-      const n = Math.floor(Math.random() * 0xffffff);
-      return '#' + n.toString(16).padStart(6, '0');
-    }
+    function randomHex() { const n = Math.floor(Math.random()*0xffffff); return '#'+n.toString(16).padStart(6,'0'); }
     function haptic(ms=8) { if ('vibrate' in navigator) navigator.vibrate(ms); }
 
-    // ===== Textures / Patterns =====
-    function makeSnakePattern(color) {
-      const off = document.createElement('canvas');
-      off.width = 16; off.height = 16;
-      const c = off.getContext('2d');
-      // Transparent base
-      c.clearRect(0,0,16,16);
-      // Diagonal stripes
-      c.strokeStyle = shade(color, -35);
-      c.lineWidth = 3;
-      c.globalAlpha = 0.35;
-      c.beginPath(); c.moveTo(-4, 16); c.lineTo(16, -4); c.stroke();
-      c.beginPath(); c.moveTo(0, 20); c.lineTo(20, 0); c.stroke();
-      c.beginPath(); c.moveTo(-8, 12); c.lineTo(12, -8); c.stroke();
-      c.globalAlpha = 1;
-      return ctx.createPattern(off, 'repeat');
-    }
-    function makeSnackPattern(color) {
-      const off = document.createElement('canvas');
-      off.width = 12; off.height = 12;
-      const c = off.getContext('2d');
-      c.clearRect(0,0,12,12);
-      // Polka dots
-      c.fillStyle = shade(color, 40);
-      c.globalAlpha = 0.35;
-      for (let y=2; y<12; y+=6) {
-        for (let x=2; x<12; x+=6) {
-          c.beginPath(); c.arc(x, y, 1.2, 0, Math.PI*2); c.fill();
+    // ===== Patterns =====
+    function makePattern(type, color) {
+      if (type === 'none') return null;
+      try {
+        const off = document.createElement('canvas');
+        const size = (type === 'carbon') ? 16 : (type === 'metal' ? 32 : 24);
+        off.width = size; off.height = size;
+        const c = off.getContext('2d');
+        c.clearRect(0,0,size,size);
+        if (type === 'stripes') {
+          c.strokeStyle = shade(color, -35); c.lineWidth = 3; c.globalAlpha = 0.35;
+          c.beginPath(); c.moveTo(-4, size); c.lineTo(size, -4); c.stroke();
+          c.beginPath(); c.moveTo(0, size+4); c.lineTo(size+4, 0); c.stroke();
+          c.beginPath(); c.moveTo(-8, size-4); c.lineTo(size-4, -8); c.stroke();
+          c.globalAlpha = 1;
+        } else if (type === 'dots') {
+          c.fillStyle = shade(color, 40); c.globalAlpha = 0.35;
+          for (let y=2; y<size; y+=6) for (let x=2; x<size; x+=6) { c.beginPath(); c.arc(x,y,1.2,0,Math.PI*2); c.fill(); }
+          c.globalAlpha = 1;
+        } else if (type === 'metal') {
+          const grad = c.createLinearGradient(0,0,size,size);
+          grad.addColorStop(0, shade(color, -10)); grad.addColorStop(1, shade(color, 10));
+          c.fillStyle = grad; c.fillRect(0,0,size,size);
+          c.globalAlpha = 0.2; c.strokeStyle = shade(color, -35); c.lineWidth = 1;
+          for (let x=0; x<size; x+=2) { c.beginPath(); c.moveTo(x,0); c.lineTo(x,size); c.stroke(); }
+          c.globalAlpha = 0.15; c.strokeStyle = shade(color, 35);
+          c.beginPath(); c.moveTo(-size*0.2, size*0.8); c.lineTo(size*1.2, -size*0.2); c.stroke();
+          c.globalAlpha = 1;
+        } else if (type === 'wood') {
+          const base = shade(color, -10); c.fillStyle = base; c.fillRect(0,0,size,size);
+          c.strokeStyle = shade(color, -40); c.lineWidth = 1.2; c.globalAlpha = 0.25;
+          for (let y=0; y<size; y+=3) { c.beginPath(); for (let x=0; x<=size; x++) { const wobble = Math.sin((x+y*0.7)*0.25)*1.2 + Math.sin((x*0.35)+y)*0.6; c.lineTo(x, y+wobble); } c.stroke(); }
+          c.globalAlpha = 0.12; for (let i=0;i<3;i++){const kx=Math.random()*size, ky=Math.random()*size, r=3+Math.random()*4; c.beginPath(); c.arc(kx, ky, r, 0, Math.PI*2); c.stroke();} c.globalAlpha=1;
+        } else if (type === 'carbon') {
+          const d1 = shade(color, -40), d2 = shade(color, -10);
+          for (let y=0; y<size; y+=4) for (let x=0; x<size; x+=4) { c.fillStyle = ((x+y)%8===0) ? d1 : d2; c.fillRect(x, y, 3, 3); }
         }
+        const pat = ctx.createPattern(off, 'repeat');
+        return pat || null;
+      } catch (e) {
+        console.warn('Pattern error; disabling texture', e);
+        return null;
       }
-      c.globalAlpha = 1;
-      return ctx.createPattern(off, 'repeat');
     }
     function refreshPatterns() {
-      snakePattern = makeSnakePattern(snakeColor);
-      snackPattern = makeSnackPattern(foodColor);
+      snakePattern = makePattern(snakeTexType, snakeColor);
+      snackPattern = makePattern(foodTexType, foodColor);
       draw();
     }
 
@@ -271,7 +306,7 @@
     function start() { if (!isGameOver && !isRunning) { isRunning = true; schedule(); } }
     function pause() { isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; draw(); }
     function restart() {
-      snake = [ { x: 8, y: 12 }, { x: 7, y: 12 }, { x: 6, y: 12 } ];
+      snake = [ {x:8,y:12}, {x:7,y:12}, {x:6,y:12} ];
       dir = { x: 1, y: 0 }; lastDir = { x: 1, y: 0 };
       food = randFood(new Set(snake.map(s => key(s.x, s.y))));
       isRunning = true; isGameOver = false; score = 0; scoreEl.textContent = score; schedule();
@@ -282,25 +317,14 @@
       const head = snake[0];
       const newHead = { x: head.x + dir.x, y: head.y + dir.y };
       lastDir = { ...dir };
-
       if (newHead.x < 0 || newHead.x >= COLS || newHead.y < 0 || newHead.y >= ROWS) { endGame(); return; }
-      for (let i = 0; i < snake.length; i++) { if (snake[i].x === newHead.x && snake[i].y === newHead.y) { endGame(); return; } }
-
+      for (let i=0; i<snake.length; i++) if (snake[i].x === newHead.x && snake[i].y === newHead.y) { endGame(); return; }
       const ate = newHead.x === food.x && newHead.y === food.y;
-      snake.unshift(newHead);
-      if (!ate) snake.pop();
-      if (ate) {
-        score += 1; scoreEl.textContent = score;
-        if (score > high) { high = score; bestEl.textContent = high; localStorage.setItem(HS_KEY, String(high)); }
-        const snakeSet = new Set(snake.map(s => key(s.x, s.y))); food = randFood(snakeSet);
-      }
+      snake.unshift(newHead); if (!ate) snake.pop();
+      if (ate) { score += 1; scoreEl.textContent = score; if (score > high) { high = score; bestEl.textContent = high; localStorage.setItem(HS_KEY, String(high)); } const snakeSet = new Set(snake.map(s => key(s.x, s.y))); food = randFood(snakeSet); }
       draw();
     }
-    function endGame() {
-      isGameOver = true; isRunning = false;
-      if (tickHandle) clearInterval(tickHandle); tickHandle = null;
-      draw();
-    }
+    function endGame() { isGameOver = true; isRunning = false; if (tickHandle) clearInterval(tickHandle); tickHandle = null; draw(); }
 
     // ===== Input: Keyboard =====
     window.addEventListener('keydown', (e) => {
@@ -314,61 +338,59 @@
       else if (k === 'r') { restart(); }
     }, { passive: false });
 
-    // ===== Input: Drag anywhere on the canvas =====
-    // Logic: as you drag, when movement from the last committed 'gestureAnchor' exceeds threshold,
-    // pick the dominant axis and set direction (guarding against 180° turns).
-    canvas.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      gestureAnchor = getCanvasPos(e);
-      gesturePos = gestureAnchor;
-      canvas.setPointerCapture(e.pointerId);
-      e.preventDefault();
+    // ===== Input: Drag on canvas (Pointer + Touch fallback) =====
+    function onStart(x, y, e) {
+      dragging = true; gestureAnchor = {x,y}; gesturePos = {x,y};
       if (!isRunning && !isGameOver) start();
-    }, { passive: false });
-
-    canvas.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      gesturePos = getCanvasPos(e);
-      const dx = gesturePos.x - gestureAnchor.x;
-      const dy = gesturePos.y - gestureAnchor.y;
-      const ax = Math.abs(dx), ay = Math.abs(dy);
-      const THRESH = 12; // pixels to trigger a turn
-      if (ax < THRESH && ay < THRESH) { draw(); return; }
-      // Determine intended direction based on dominant axis
-      let ndx = 0, ndy = 0;
-      if (ax > ay) ndx = dx > 0 ? 1 : -1; else ndy = dy > 0 ? 1 : -1;
-      const changed = trySetDir(ndx, ndy);
-      if (changed) {
-        haptic(8);
-        // reset anchor so additional movement requires a fresh threshold
-        gestureAnchor = { ...gesturePos };
-      }
-      draw();
-      e.preventDefault();
-    }, { passive: false });
-
-    function endDrag(e) {
-      if (!dragging) return;
-      dragging = false; gestureAnchor = null; gesturePos = null;
-      try { canvas.releasePointerCapture(e.pointerId); } catch {}
-      draw();
+      if (e && e.preventDefault) e.preventDefault();
     }
-    canvas.addEventListener('pointerup', endDrag, { passive: true });
-    canvas.addEventListener('pointercancel', endDrag, { passive: true });
-    canvas.addEventListener('pointerleave', endDrag, { passive: true });
+    function onMove(x, y, e) {
+      if (!dragging) return;
+      gesturePos = {x,y};
+      const dx = gesturePos.x - gestureAnchor.x, dy = gesturePos.y - gestureAnchor.y;
+      const ax = Math.abs(dx), ay = Math.abs(dy), THRESH = 12;
+      if (ax < THRESH && ay < THRESH) { draw(); return; }
+      let ndx = 0, ndy = 0; if (ax > ay) ndx = dx > 0 ? 1 : -1; else ndy = dy > 0 ? 1 : -1;
+      const changed = trySetDir(ndx, ndy);
+      if (changed) { haptic(8); gestureAnchor = { ...gesturePos }; }
+      draw();
+      if (e && e.preventDefault) e.preventDefault();
+    }
+    function onEnd(e) { dragging = false; gestureAnchor = null; gesturePos = null; draw(); if (e && e.preventDefault) e.preventDefault(); }
 
-    function getCanvasPos(e) {
+    function getCanvasPosFromEvent(e) {
       const rect = canvas.getBoundingClientRect();
-      // convert to logical units (account for DPR transform)
-      const x = (e.clientX - rect.left) / (rect.width) * WIDTH;
-      const y = (e.clientY - rect.top) / (rect.height) * HEIGHT;
+      let cx, cy;
+      if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+      else if (e.changedTouches && e.changedTouches[0]) { cx = e.changedTouches[0].clientX; cy = e.changedTouches[0].clientY; }
+      else { cx = e.clientX; cy = e.clientY; }
+      const x = (cx - rect.left) / rect.width * WIDTH;
+      const y = (cy - rect.top) / rect.height * HEIGHT;
       return { x, y };
+    }
+
+    if (hasPointer) {
+      canvas.addEventListener('pointerdown', (e) => { const p = getCanvasPosFromEvent(e); canvas.setPointerCapture(e.pointerId); onStart(p.x, p.y, e); }, { passive: false });
+      canvas.addEventListener('pointermove', (e) => { const p = getCanvasPosFromEvent(e); onMove(p.x, p.y, e); }, { passive: false });
+      const end = (e) => { onEnd(e); try { canvas.releasePointerCapture(e.pointerId); } catch {} };
+      canvas.addEventListener('pointerup', end, { passive: false });
+      canvas.addEventListener('pointercancel', end, { passive: false });
+      canvas.addEventListener('pointerleave', end, { passive: false });
+    } else {
+      // Touch fallback
+      canvas.addEventListener('touchstart', (e) => { const p = getCanvasPosFromEvent(e); onStart(p.x, p.y, e); }, { passive: false });
+      canvas.addEventListener('touchmove', (e) => { const p = getCanvasPosFromEvent(e); onMove(p.x, p.y, e); }, { passive: false });
+      canvas.addEventListener('touchend', onEnd, { passive: false });
+      canvas.addEventListener('touchcancel', onEnd, { passive: false });
+      // Mouse fallback
+      canvas.addEventListener('mousedown', (e) => { const p = getCanvasPosFromEvent(e); onStart(p.x, p.y, e); }, { passive: false });
+      window.addEventListener('mousemove', (e) => { const p = getCanvasPosFromEvent(e); onMove(p.x, p.y, e); }, { passive: false });
+      window.addEventListener('mouseup', onEnd, { passive: false });
     }
 
     function trySetDir(x, y) {
       if (x === 0 && y === 0) return false;
-      if (lastDir.x + x === 0 && lastDir.y + y === 0) return false; // block 180°
-      // If we're not moving yet (game hasn't ticked), also block immediate reverse of current dir.
+      if (lastDir.x + x === 0 && lastDir.y + y === 0) return false;
       if (dir.x + x === 0 && dir.y + y === 0) return false;
       dir = { x, y };
       return true;
@@ -376,132 +398,52 @@
 
     // ===== Drawing =====
     function draw() {
-      // background
       ctx.save();
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-      // grid
+      ctx.fillStyle = bgColor; ctx.fillRect(0, 0, WIDTH, HEIGHT);
       if (gridOn) {
-        ctx.globalAlpha = 0.18;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        for (let x = 0; x <= WIDTH; x += TILE) {
-          ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, HEIGHT); ctx.stroke();
-        }
-        for (let y = 0; y <= HEIGHT; y += TILE) {
-          ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(WIDTH, y + 0.5); ctx.stroke();
-        }
+        ctx.globalAlpha = 0.18; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+        for (let x = 0; x <= WIDTH; x += TILE) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, HEIGHT); ctx.stroke(); }
+        for (let y = 0; y <= HEIGHT; y += TILE) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(WIDTH, y + 0.5); ctx.stroke(); }
         ctx.globalAlpha = 1;
       }
-
-      // snack with texture + glow
       drawFood(food.x, food.y, foodColor);
-
-      // snake (head last to draw eyes on top)
-      for (let i = snake.length - 1; i >= 0; i--) {
-        const seg = snake[i]; const isHead = i === 0;
-        drawBlock(seg.x, seg.y, snakeColor, isHead);
-      }
-
-      // drag indicator
+      for (let i = snake.length - 1; i >= 0; i--) { const seg = snake[i]; drawBlock(seg.x, seg.y, snakeColor, i===0); }
       if (dragging && gestureAnchor && gesturePos) {
-        ctx.globalAlpha = 0.9;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(gestureAnchor.x, gestureAnchor.y);
-        ctx.lineTo(gesturePos.x, gesturePos.y);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        // end cap
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(gesturePos.x, gesturePos.y, 3.5, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 0.9; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(gestureAnchor.x, gestureAnchor.y); ctx.lineTo(gesturePos.x, gesturePos.y); ctx.stroke();
+        ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(gesturePos.x, gesturePos.y, 3.5, 0, Math.PI*2); ctx.fill();
       }
-
       if (isGameOver) {
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 28px Inter, system-ui, Segoe UI, Roboto';
-        ctx.fillText('Game Over', WIDTH / 2, HEIGHT / 2 - 12);
-        ctx.font = '16px Inter, system-ui, Segoe UI, Roboto';
-        ctx.fillText('Press R to restart', WIDTH / 2, HEIGHT / 2 + 16);
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        ctx.fillStyle = '#ffffff'; ctx.textAlign='center'; ctx.font='bold 28px Inter, system-ui, Segoe UI, Roboto';
+        ctx.fillText('Game Over', WIDTH/2, HEIGHT/2 - 12); ctx.font='16px Inter, system-ui, Segoe UI, Roboto'; ctx.fillText('Press R to restart', WIDTH/2, HEIGHT/2 + 16);
       }
       ctx.restore();
     }
 
     function drawBlock(gx, gy, color, head=false) {
-      const x = gx * TILE, y = gy * TILE;
-      const pad = 2, w = TILE - pad*2, h = TILE - pad*2, r = 5;
-      // Base gradient (light on top, darker at bottom)
+      const x = gx*TILE, y = gy*TILE, pad=2, w=TILE-pad*2, h=TILE-pad*2, r=5;
       const grad = ctx.createLinearGradient(0, y + pad, 0, y + pad + h);
-      grad.addColorStop(0, shade(color, 30));
-      grad.addColorStop(1, shade(color, -15));
-      ctx.fillStyle = grad;
-      roundRectPath(x + pad, y + pad, w, h, r);
-      ctx.fill();
-
-      // Texture overlay
-      ctx.save();
-      ctx.globalAlpha = 0.7;
-      ctx.fillStyle = snakePattern;
-      roundRectPath(x + pad, y + pad, w, h, r);
-      ctx.fill();
-      ctx.restore();
-
-      // Edge stroke
-      ctx.strokeStyle = shade(color, -40);
-      ctx.lineWidth = 1;
-      roundRectPath(x + pad + 0.5, y + pad + 0.5, w - 1, h - 1, r - 1);
-      ctx.stroke();
-
+      grad.addColorStop(0, shade(color, 30)); grad.addColorStop(1, shade(color, -15));
+      ctx.fillStyle = grad; roundRectPath(x + pad, y + pad, w, h, r); ctx.fill();
+      if (snakePattern && texAlpha > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, Math.max(0, texAlpha)); ctx.fillStyle = snakePattern; roundRectPath(x + pad, y + pad, w, h, r); ctx.fill(); ctx.restore(); }
+      ctx.strokeStyle = shade(color, -40); ctx.lineWidth = 1; roundRectPath(x + pad + 0.5, y + pad + 0.5, w - 1, h - 1, r - 1); ctx.stroke();
       if (head) {
-        // Eyes
-        ctx.fillStyle = '#000';
-        const eye = Math.max(2, Math.floor(TILE * 0.12));
-        const off = Math.max(3, Math.floor(TILE * 0.22));
+        ctx.fillStyle = '#000'; const eye = Math.max(2, Math.floor(TILE*0.12)); const off = Math.max(3, Math.floor(TILE*0.22));
         ctx.beginPath(); ctx.arc(x + TILE/2 - off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(x + TILE/2 + off, y + TILE/2 - off, eye, 0, Math.PI*2); ctx.fill();
-        // Subtle highlight
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.beginPath(); ctx.arc(x + TILE/2 - off - 1, y + TILE/2 - off - 1, Math.max(1, eye-1), 0, Math.PI*2); ctx.fill();
       }
     }
 
     function drawFood(gx, gy, color) {
-      const cx = gx * TILE + TILE/2, cy = gy * TILE + TILE/2;
-      const r = (TILE * 0.6) / 2;
-      // Glow
-      ctx.save();
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 12;
-      // Base radial gradient
+      const cx = gx*TILE + TILE/2, cy = gy*TILE + TILE/2, r=(TILE*0.6)/2;
       const rg = ctx.createRadialGradient(cx - r*0.35, cy - r*0.35, r*0.3, cx, cy, r);
-      rg.addColorStop(0, shade(color, 30));
-      rg.addColorStop(1, shade(color, -10));
-      ctx.fillStyle = rg;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+      rg.addColorStop(0, shade(color, 30)); rg.addColorStop(1, shade(color, -10));
+      ctx.save(); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+      if (snackPattern && texAlpha > 0) { ctx.globalAlpha = Math.min(1, Math.max(0, texAlpha)); ctx.fillStyle = snackPattern; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip(); ctx.fillRect(cx-r, cy-r, r*2, r*2); ctx.globalAlpha=1; }
       ctx.restore();
-
-      // Texture overlay (dots)
-      ctx.save();
-      ctx.globalAlpha = 0.65;
-      ctx.fillStyle = snackPattern;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
-      // Fill a rectangle that covers the circle with the pattern
-      ctx.fillRect(cx - r, cy - r, r*2, r*2);
-      ctx.restore();
-
-      // Specular highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.beginPath(); ctx.ellipse(cx - r*0.25, cy - r*0.35, r*0.35, r*0.2, -0.5, 0, Math.PI*2); ctx.fill();
-      // Edge
-      ctx.strokeStyle = shade(color, -35);
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(cx - r*0.25, cy - r*0.35, r*0.35, r*0.2, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = shade(color, -35); ctx.lineWidth=1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
     }
 
     function roundRectPath(x, y, w, h, r) {
@@ -519,28 +461,23 @@
     startBtn.addEventListener('click', start);
     pauseBtn.addEventListener('click', pause);
     restartBtn.addEventListener('click', restart);
-    resetBestBtn.addEventListener('click', () => {
-      localStorage.removeItem(HS_KEY);
-      high = 0;
-      bestEl.textContent = high;
-    });
+    resetBestBtn.addEventListener('click', () => { localStorage.removeItem(HS_KEY); high = 0; bestEl.textContent = high; });
 
     snakeColorInput.addEventListener('input', (e) => { snakeColor = e.target.value; refreshPatterns(); });
     foodColorInput.addEventListener('input', (e) => { foodColor = e.target.value; refreshPatterns(); });
     bgColorInput.addEventListener('input', (e) => { bgColor = e.target.value; draw(); });
     gridToggle.addEventListener('change', (e) => { gridOn = e.target.checked; draw(); });
     speedInput.addEventListener('input', (e) => { speed = Number(e.target.value); speedVal.textContent = speed; if (isRunning) schedule(); });
+    texAlphaInput.addEventListener('input', (e) => { texAlpha = Number(e.target.value)/100; texAlphaVal.textContent = e.target.value; draw(); });
+    snakeTexSel.addEventListener('change', (e) => { snakeTexType = e.target.value; refreshPatterns(); });
+    foodTexSel.addEventListener('change', (e) => { foodTexType = e.target.value; refreshPatterns(); });
     document.getElementById('randomize').addEventListener('click', () => {
       snakeColor = randomHex(); foodColor = randomHex();
-      snakeColorInput.value = snakeColor; foodColorInput.value = foodColor;
-      refreshPatterns();
+      snakeColorInput.value = snakeColor; foodColorInput.value = foodColor; refreshPatterns();
     });
 
-    // Redraw on resize to keep DPR scaling accurate if device zoom changes
-    window.addEventListener('resize', resizeCanvas);
-
-    // Initial draw
-    draw();
+    // Initial draw (in case intervals never start)
+    requestAnimationFrame(draw);
   </script>
 </body>
 </html>
